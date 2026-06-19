@@ -1,0 +1,272 @@
+{
+  "meta": {
+    "id": "blackhole",
+    "question": "Could the LHC create a black hole that destroys Earth?",
+    "version": 4,
+    "updated": "2026-06-13T02:17:07.774746+00:00"
+  },
+  "positions": [
+    {
+      "id": "pos_no_risk",
+      "label": "No risk",
+      "hue": "#2E8B6F"
+    },
+    {
+      "id": "pos_residual_concern",
+      "label": "Residual concern",
+      "hue": "#B4502E"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "ds_cosmic_ray_safety_argument",
+      "label": "Cosmic-ray safety argument",
+      "aliases": []
+    },
+    {
+      "id": "ds_hawking_radiation_theory",
+      "label": "Hawking radiation (theory)",
+      "aliases": []
+    },
+    {
+      "id": "ds_white_dwarf_neutron_star_survival",
+      "label": "White dwarf / neutron star survival",
+      "aliases": []
+    },
+    {
+      "id": "ds_accretion_rate_modeling",
+      "label": "Accretion-rate modeling",
+      "aliases": []
+    }
+  ],
+  "factors": [
+    {
+      "id": "f_micro_black_holes_evaporate_via_hawking_radi",
+      "label": "Micro black holes evaporate via Hawking radiation",
+      "weights": {
+        "pos_no_risk": "high",
+        "pos_residual_concern": "low"
+      },
+      "rationale": "",
+      "provenance": [
+        {
+          "source": "src_lsag_review_of_the_safety_of_lhc_collisions_2008",
+          "pos": "pos_no_risk",
+          "quote": "decay almost instantly via Hawking radiation"
+        },
+        {
+          "source": "src_cern_the_safety_of_the_lhc_public_statement_2008",
+          "pos": "pos_no_risk",
+          "quote": ""
+        },
+        {
+          "source": "src_plaga_potential_catastrophic_risk_from_metas_2008",
+          "pos": "pos_residual_concern",
+          "quote": "Hawking radiation is not established"
+        }
+      ]
+    },
+    {
+      "id": "f_cosmic_ray_empirical_bound_is_decisive",
+      "label": "Cosmic-ray empirical bound is decisive",
+      "weights": {
+        "pos_no_risk": "high",
+        "pos_residual_concern": "low"
+      },
+      "rationale": "",
+      "provenance": [
+        {
+          "source": "src_lsag_review_of_the_safety_of_lhc_collisions_2008",
+          "pos": "pos_no_risk",
+          "quote": "cosmic rays...for billions of years"
+        },
+        {
+          "source": "src_giddings_mangano_astrophysical_implications__2008",
+          "pos": "pos_no_risk",
+          "quote": ""
+        },
+        {
+          "source": "src_plaga_potential_catastrophic_risk_from_metas_2008",
+          "pos": "pos_residual_concern",
+          "quote": "collider black holes would be slow, unlike cosmic-ray ones"
+        }
+      ]
+    },
+    {
+      "id": "f_precautionary_weight_on_catastrophic_tail",
+      "label": "Precautionary weight on catastrophic tail",
+      "weights": {
+        "pos_no_risk": "low",
+        "pos_residual_concern": "high"
+      },
+      "rationale": "",
+      "provenance": [
+        {
+          "source": "src_lsag_review_of_the_safety_of_lhc_collisions_2008",
+          "pos": "pos_no_risk",
+          "quote": ""
+        },
+        {
+          "source": "src_plaga_potential_catastrophic_risk_from_metas_2008",
+          "pos": "pos_residual_concern",
+          "quote": ""
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "src_lsag_review_of_the_safety_of_lhc_collisions_2008",
+      "title": "LSAG — Review of the Safety of LHC Collisions",
+      "year": 2008,
+      "url": "https://lsag.web.cern.ch/LSAG-Report.pdf",
+      "position": "pos_no_risk",
+      "evidence": "Expert review",
+      "funding": "independent",
+      "population": "—",
+      "confidence": "high",
+      "restsOn": [
+        "ds_cosmic_ray_safety_argument",
+        "ds_hawking_radiation_theory"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "no conceivable danger",
+          "extractionConfidence": 0.95
+        }
+      },
+      "addedIn": 1
+    },
+    {
+      "id": "src_giddings_mangano_astrophysical_implications__2008",
+      "title": "Giddings & Mangano — Astrophysical implications of stable TeV black holes",
+      "year": 2008,
+      "url": "https://arxiv.org/abs/0806.3381",
+      "position": "pos_no_risk",
+      "evidence": "Theoretical analysis",
+      "funding": "independent",
+      "population": "—",
+      "confidence": "high",
+      "restsOn": [
+        "ds_cosmic_ray_safety_argument",
+        "ds_white_dwarf_neutron_star_survival"
+      ],
+      "provenance": {
+        "restsOn": {
+          "quote": "white dwarfs and neutron stars would already have been destroyed",
+          "extractionConfidence": 0.9
+        }
+      },
+      "addedIn": 2
+    },
+    {
+      "id": "src_cern_the_safety_of_the_lhc_public_statement_2008",
+      "title": "CERN — The Safety of the LHC (public statement)",
+      "year": 2008,
+      "url": "https://home.web.cern.ch/science/accelerators/large-hadron-collider/safety-lhc",
+      "position": "pos_no_risk",
+      "evidence": "Institutional statement",
+      "funding": "independent",
+      "population": "—",
+      "confidence": "high",
+      "restsOn": [
+        "ds_cosmic_ray_safety_argument",
+        "ds_hawking_radiation_theory"
+      ],
+      "provenance": {},
+      "addedIn": 3
+    },
+    {
+      "id": "src_plaga_potential_catastrophic_risk_from_metas_2008",
+      "title": "Plaga — Potential catastrophic risk from metastable black holes at colliders",
+      "year": 2008,
+      "url": "https://arxiv.org/abs/0808.1415",
+      "position": "pos_residual_concern",
+      "evidence": "Theoretical critique",
+      "funding": "independent",
+      "population": "—",
+      "confidence": "low",
+      "restsOn": [
+        "ds_accretion_rate_modeling"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "metastable...could grow",
+          "extractionConfidence": 0.7
+        }
+      },
+      "addedIn": 4
+    }
+  ],
+  "log": [
+    {
+      "version": 1,
+      "action": "add-source",
+      "source": "src_lsag_review_of_the_safety_of_lhc_collisions_2008",
+      "title": "LSAG — Review of the Safety of LHC Collisions",
+      "ts": "2026-06-13T02:17:07.675715+00:00",
+      "newDatasets": [
+        "ds_cosmic_ray_safety_argument",
+        "ds_hawking_radiation_theory"
+      ],
+      "newPositions": [
+        "pos_no_risk"
+      ],
+      "diff": [
+        "distribution: No risk 0 → 1",
+        "+ new position: No risk",
+        "most-reused case-wide: — → Cosmic-ray safety argument/Hawking radiation (theory) 1/1"
+      ]
+    },
+    {
+      "version": 2,
+      "action": "add-source",
+      "source": "src_giddings_mangano_astrophysical_implications__2008",
+      "title": "Giddings & Mangano — Astrophysical implications of stable TeV black holes",
+      "ts": "2026-06-13T02:17:07.712423+00:00",
+      "newDatasets": [
+        "ds_white_dwarf_neutron_star_survival"
+      ],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 1 → 2",
+        "⚠ No risk crossed into CONCENTRATED",
+        "most-reused case-wide: Cosmic-ray safety argument/Hawking radiation (theory) 1 → Cosmic-ray safety argument 2/2"
+      ]
+    },
+    {
+      "version": 3,
+      "action": "add-source",
+      "source": "src_cern_the_safety_of_the_lhc_public_statement_2008",
+      "title": "CERN — The Safety of the LHC (public statement)",
+      "ts": "2026-06-13T02:17:07.744819+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 2 → 3",
+        "most-reused case-wide: Cosmic-ray safety argument 2 → Cosmic-ray safety argument 3/3"
+      ]
+    },
+    {
+      "version": 4,
+      "action": "add-source",
+      "source": "src_plaga_potential_catastrophic_risk_from_metas_2008",
+      "title": "Plaga — Potential catastrophic risk from metastable black holes at colliders",
+      "ts": "2026-06-13T02:17:07.774746+00:00",
+      "newDatasets": [
+        "ds_accretion_rate_modeling"
+      ],
+      "newPositions": [
+        "pos_residual_concern"
+      ],
+      "diff": [
+        "distribution: Residual concern 0 → 1",
+        "+ new position: Residual concern",
+        "+ new crux: Micro black holes evaporate via Hawking radiation",
+        "+ new crux: Cosmic-ray empirical bound is decisive",
+        "+ new crux: Precautionary weight on catastrophic tail",
+        "blindspot opened: No risk missing \"Theoretical critique\""
+      ]
+    }
+  ]
+}

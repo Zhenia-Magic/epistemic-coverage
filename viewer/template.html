@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Epistemic Coverage — research disputes, mapped</title>
+<style>
+  :root{
+    --bg:#F5F6F7; --surface:#FFFFFF; --ink:#15171B; --muted:#61676E; --faint:#8A9098;
+    --line:#E4E7EA; --line-strong:#CDD2D7; --chrome:#1B1D24;
+    --ochre:#8a6510; --ochre-bg:#F5ECD6; --flag:#2f6296; --flag-bg:#E7EEF6;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased;font-size:15px;}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 24px 80px;}
+  a{color:var(--flag);}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;
+    border-bottom:1px solid var(--line-strong);padding-bottom:18px;margin-bottom:8px;}
+  .brand{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-family:var(--mono);}
+  h1{font-size:25px;font-weight:600;margin:6px 0 0;letter-spacing:-.01em;}
+  .sub{color:var(--muted);font-size:14px;margin-top:4px;max-width:52ch;}
+  .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;background:var(--surface);}
+  .seg button{appearance:none;border:0;background:transparent;font:inherit;color:var(--muted);padding:8px 14px;cursor:pointer;font-size:13px;}
+  .seg button+button{border-left:1px solid var(--line);}
+  .seg button[aria-pressed="true"]{background:var(--chrome);color:#fff;}
+  nav.tabs{display:flex;gap:2px;margin:22px 0 4px;border-bottom:1px solid var(--line);}
+  nav.tabs button{appearance:none;border:0;background:transparent;font:inherit;cursor:pointer;
+    color:var(--muted);padding:10px 4px;margin-right:22px;font-size:14px;position:relative;}
+  nav.tabs button[aria-selected="true"]{color:var(--ink);font-weight:500;}
+  nav.tabs button[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--chrome);}
+  .qbar{margin:22px 0 6px;} .qbar .q{font-size:18px;font-weight:600;}
+  .qbar .meta{font-family:var(--mono);font-size:12px;color:var(--faint);margin-top:2px;}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0;}
+  .panel h3{margin:0 0 4px;font-size:14px;font-weight:600;}
+  .panel .hint{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin:0 0 14px;}
+  .distrib{display:flex;height:40px;border-radius:8px;overflow:hidden;border:1px solid var(--line);}
+  .distrib .seg-bar{display:block;line-height:40px;text-align:center;font-size:12px;font-family:var(--mono);
+    cursor:pointer;border:0;color:#fff;min-width:0;padding:0 8px;transition:opacity .15s;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .distrib .seg-bar.dim{opacity:.32;}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12.5px;color:var(--muted);}
+  .legend .key{display:inline-flex;align-items:center;gap:7px;cursor:pointer;}
+  .legend .dot{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .skew{font-family:var(--mono);font-size:12px;color:var(--ochre);background:var(--ochre-bg);
+    border-radius:8px;padding:9px 12px;margin-top:14px;display:flex;gap:8px;align-items:flex-start;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
+  .card{border:1px solid var(--line);border-radius:11px;padding:14px 15px;background:var(--surface);border-left-width:3px;}
+  .card .ct{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .card .titlewrap{min-width:0;flex:1 1 auto;}
+  .card .title{font-size:14.5px;font-weight:600;overflow-wrap:anywhere;} .card .yr{font-family:var(--mono);font-size:11px;color:var(--faint);}
+  .stance{font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:6px;white-space:normal;
+    text-align:right;flex:0 1 auto;max-width:52%;line-height:1.4;}
+  .tags{margin-top:11px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tag{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:6px;background:#F1F3F4;color:var(--muted);}
+  .tag.industry{background:var(--ochre-bg);color:var(--ochre);} .tag.rests{background:#EFF1F2;color:var(--faint);}
+  .tag.new{background:var(--flag-bg);color:var(--flag);}
+  .bs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+  .bs{border:1px solid var(--line);border-radius:11px;padding:13px 15px;}
+  .bs .bs-h{font-family:var(--mono);font-size:12px;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+  .bs ul{margin:0;padding-left:16px;} .bs li{font-size:13px;color:var(--muted);margin:4px 0;} .bs li b{color:var(--ink);font-weight:500;}
+  table.mtx{border-collapse:collapse;width:100%;font-size:13px;}
+  table.mtx th,table.mtx td{padding:9px 10px;text-align:center;border:1px solid var(--line);}
+  table.mtx th.factor,table.mtx td.factor{text-align:left;font-weight:500;width:34%;}
+  table.mtx thead th{font-family:var(--mono);font-size:11.5px;font-weight:500;color:#fff;overflow-wrap:anywhere;vertical-align:top;}
+  table.mtx td.cell{font-family:var(--mono);font-size:11px;color:var(--ink);}
+  table.mtx tr.crux td.factor{font-weight:600;}
+  .cruxbadge{font-family:var(--mono);font-size:10px;color:#fff;background:var(--chrome);border-radius:5px;padding:2px 6px;margin-left:8px;vertical-align:1px;}
+  .onetag{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:8px;}
+  table.mtx tr.onesided td{opacity:.5;}
+  .rationale{font-size:13px;color:var(--muted);background:#FAFBFB;border-left:3px solid var(--line-strong);
+    padding:10px 14px;margin:12px 0 0;border-radius:0 8px 8px 0;display:none;}
+  .rationale.show{display:block;}
+  tr.factor-row{cursor:pointer;} tr.factor-row:hover td{background:#FAFBFB;}
+  .ind-row{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;padding:15px 0;border-bottom:1px solid var(--line);}
+  .ind-row:last-child{border-bottom:0;}
+  .ind-name{font-size:14px;font-weight:500;} .ind-sub{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .ind-sub2{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:8px;}
+  .cmeter{position:relative;height:26px;border:1px solid var(--line);border-radius:7px;background:#F4F6F7;overflow:hidden;margin-top:9px;max-width:460px;}
+  .cmeter-fill{position:absolute;left:0;top:0;bottom:0;opacity:.22;}
+  .cmeter-lab{position:relative;font-family:var(--mono);font-size:11px;color:var(--ink);padding:0 9px;line-height:26px;white-space:nowrap;}
+  .ind-readout{text-align:right;min-width:78px;}
+  .ind-readout .pctn{font-family:var(--mono);font-size:21px;font-weight:600;line-height:1.1;}
+  .ind-readout .plab{font-family:var(--mono);font-size:10px;color:var(--faint);}
+  .domline{font-family:var(--mono);font-size:12px;color:var(--flag);background:var(--flag-bg);border-radius:8px;
+    padding:9px 12px;margin:0 0 16px;display:flex;gap:8px;align-items:flex-start;}
+  .flagbox{font-size:13px;color:var(--flag);background:var(--flag-bg);border-radius:8px;padding:11px 14px;margin-top:6px;
+    display:flex;gap:9px;align-items:flex-start;line-height:1.5;}
+  .ch{border-left:2px solid var(--line-strong);padding:2px 0 2px 16px;margin:0 0 4px 6px;position:relative;}
+  .ch::before{content:"";position:absolute;left:-5px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--chrome);}
+  .ch-h{font-size:14px;font-weight:600;margin-top:8px;}
+  .ch-meta{font-family:var(--mono);font-size:11px;color:var(--faint);margin:1px 0 7px;}
+  .ch-diff{font-family:var(--mono);font-size:12px;color:var(--muted);background:#FAFBFB;border:1px solid var(--line);
+    border-radius:8px;padding:9px 12px;}
+  .ch-diff div{margin:3px 0;} .ch-diff div.warn{color:var(--ochre);} .ch-diff div.add{color:var(--flag);}
+  footer.note{margin-top:30px;font-family:var(--mono);font-size:11px;color:var(--faint);border-top:1px solid var(--line);padding-top:14px;line-height:1.7;}
+  .empty{padding:60px 20px;text-align:center;color:var(--muted);}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand">Epistemic Coverage</div>
+      <h1>Research disputes, mapped like the news</h1>
+      <div class="sub">Who holds which position, where the disagreement actually lives, and whether an apparent consensus is real — or the same few sources counted many times.</div>
+    </div>
+    <div class="seg" id="caseSwitch" role="group" aria-label="Choose a case"></div>
+  </header>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Views"></nav>
+  <div class="qbar"><div class="q" id="qText"></div><div class="meta" id="qMeta"></div></div>
+  <div id="view"></div>
+  <footer class="note" id="foot"></footer>
+</div>
+
+<script>
+/* This file is RENDER-ONLY. Every number was computed once, in Python (engine/assess.py),
+   and baked into DATA by `python cli.py build`. The viewer never recomputes — so there is
+   no drift between what the pipeline concludes and what you see. DATA = { order, cases:{ id:
+   { kb, assessment } } }. kb.log carries the per-version diff that powers the Changes tab. */
+const DATA = /*__DATA__*/null;
+
+const VIEWS=[
+  {id:"coverage",label:"Coverage & blindspots"},
+  {id:"divergence",label:"Divergence matrix"},
+  {id:"independence",label:"Independence audit"},
+  {id:"changes",label:"Changes"},
+];
+const state={caseId:DATA&&DATA.order[0], view:"coverage", filter:null};
+const el=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function rgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+function pct(x){return Math.round(x*100)+"%";}
+function cur(){return DATA.cases[state.caseId];}
+function maps(kb){
+  const pos={},ds={}; kb.positions.forEach(p=>pos[p.id]=p); kb.datasets.forEach(d=>ds[d.id]=d);
+  return {pos,ds};
+}
+
+function caseLabel(c){
+  // CLI cases have a human id ("eggs"); portal questions have a generated hex id — for those
+  // show a short version of the question instead, so the chip is informative.
+  const mid=c.kb.meta.id||"";
+  if(/^[0-9a-f]{8,}$/i.test(mid)){
+    const q=c.kb.meta.question||mid;
+    return q.length>44?q.slice(0,42)+"…":q;
+  }
+  return mid;
+}
+function renderChrome(){
+  // a single chip for one question is just a redundant label (the question shows below) — hide it
+  el("caseSwitch").style.display = DATA.order.length>1 ? "" : "none";
+  el("caseSwitch").innerHTML=DATA.order.map(id=>{
+    const c=DATA.cases[id];
+    return `<button data-case="${id}" aria-pressed="${id===state.caseId}">${esc(caseLabel(c))}</button>`;
+  }).join("");
+  el("tabs").innerHTML=VIEWS.map(v=>
+    `<button role="tab" data-view="${v.id}" aria-selected="${v.id===state.view}">${esc(v.label)}</button>`).join("");
+  const kb=cur().kb;
+  el("qText").textContent=kb.meta.question;
+  el("qMeta").textContent=`v${kb.meta.version} · ${kb.sources.length} sources · ${kb.positions.length} positions · ${kb.factors.length} factors · ${kb.datasets.length} datasets`;
+}
+
+function shortLabel(s, max=20){
+  // Fallback for KBs without a stored shortLabel: plain word-boundary truncation
+  if(s.length <= max) return s;
+  const cut = s.lastIndexOf(' ', max);
+  return (cut > max * 0.4 ? s.slice(0, cut) : s.slice(0, max)) + '…';
+}
+
+function renderCoverage(c){
+  const {kb,assessment:a}=c, {pos,ds}=maps(kb), active=state.filter;
+  const bar=a.distribution.map(d=>{
+    const dim=active&&active!==d.id?"dim":"";
+    const barLabel = (pos[d.id] && pos[d.id].shortLabel) || shortLabel(d.label);
+    return `<button class="seg-bar ${dim}" data-pos="${d.id}" style="flex:${d.count||0.0001};background:${d.hue}"
+      title="${esc(d.label)} — ${d.count} sources">${d.pct>=10?esc(barLabel)+" · "+d.pct+"%":d.pct+"%"}</button>`;
+  }).join("");
+  const legend=a.distribution.map(d=>
+    `<span class="key" data-pos="${d.id}"><span class="dot" style="background:${d.hue}"></span>${esc(d.label)} <span style="font-family:var(--mono);color:var(--faint)">(${d.count})</span></span>`).join("");
+  let skewHtml="";
+  if(a.fundingSkew){
+    const f=a.fundingSkew, parts=[];
+    if(f.top) parts.push(`of ${f.n} interested-funding source${f.n===1?"":"s"} (industry/advocacy), the largest share back <b style="color:var(--ochre)">"${esc(f.top.label)}"</b>`);
+    if(f.undisclosed) parts.push(`${f.undisclosed} of ${f.total} source${f.total===1?"":"s"} don't disclose funding`);
+    if(parts.length) skewHtml=`<div class="skew"><span>⚠</span><span>${parts.join("; ")} — weigh before counting heads.</span></div>`;
+  }
+  const maxVer=kb.meta.version;
+  const cards=kb.sources.filter(s=>!active||s.position===active).map(s=>{
+    const p=pos[s.position];
+    const rests=(s.restsOn||[]).map(id=>`<span class="tag rests">↳ ${esc(ds[id]?ds[id].label:id)}</span>`).join("");
+    const isNew=s.addedIn&&s.addedIn===maxVer&&maxVer>1;
+    return `<div class="card" style="border-left-color:${p.hue}">
+      <div class="ct"><div class="titlewrap"><span class="title">${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a>`:esc(s.title)}</span> <span class="yr">${s.year||""}</span></div>
+        <span class="stance" style="background:${rgba(p.hue,.13)};color:${p.hue}">${esc(p.label)}</span></div>
+      <div class="tags">
+        <span class="tag">${esc(s.evidence)}</span>
+        <span class="tag ${/industry|advocacy/i.test(s.funding)?'industry':(/undisclosed/i.test(s.funding)?'rests':'')}">${esc(s.funding||'Undisclosed')}</span>
+        ${s.population&&s.population!=="—"?`<span class="tag">${esc(s.population)}</span>`:""}
+        <span class="tag">conf: ${esc(s.confidence)}</span>
+        ${isNew?`<span class="tag new">added v${s.addedIn}</span>`:""}
+        ${rests}
+      </div></div>`;
+  }).join("");
+  const bsCards=a.blindspots.map(p=>{
+    const items=[];
+    if(p.missingEvidence.length) items.push(`<li>never argues from <b>${p.missingEvidence.map(esc).join(", ")}</b></li>`);
+    if(p.missingPop.length) items.push(`<li>doesn't address <b>${p.missingPop.map(esc).join(", ")}</b></li>`);
+    if(!items.length) items.push(`<li style="color:var(--faint)">covers every evidence type & subgroup present</li>`);
+    return `<div class="bs"><div class="bs-h"><span class="dot" style="width:10px;height:10px;border-radius:3px;background:${p.hue}"></span>${esc(p.label)} skips</div><ul>${items.join("")}</ul></div>`;
+  }).join("");
+  return `
+    <div class="panel"><h3>How the evidence base splits</h3>
+      <p class="hint">distribution() — share of sources by position · click to filter</p>
+      <div class="distrib">${bar}</div><div class="legend">${legend}</div>${skewHtml}</div>
+    <div class="panel"><h3>Sources${active?` — ${esc(pos[active].label)}`:""}</h3>
+      <p class="hint">each source tagged with evidence type, funding, population, and the datasets it rests on (↳)</p>
+      <div class="cards">${cards}</div></div>
+    <div class="panel"><h3>Blindspots — what each side leaves out</h3>
+      <p class="hint">blindspots() — evidence types & subgroups present in the case but absent from a position's own sources</p>
+      <div class="bs-grid">${bsCards}</div></div>`;
+}
+
+function renderDivergence(c){
+  const {kb,assessment:a}=c;
+  const cruxBy={}; a.cruxes.forEach(x=>cruxBy[x.id]=x);
+  const info=f=>cruxBy[f.id]||{spread:0,isCrux:false,engaged:0};
+  const WLABEL={high:"high",med:"med",low:"low","n/a":"n/a"}, WV={high:3,med:2,low:1,"n/a":0};
+  // cruxes first, then factors >=2 camps engage, then one-sided (only one camp weighs them)
+  const rank=z=>z.isCrux?0:(z.engaged>=2?1:2);
+  const ordered=[...kb.factors].sort((x,y)=>{const ix=info(x),iy=info(y);
+    return rank(ix)-rank(iy) || iy.spread-ix.spread || iy.engaged-ix.engaged;});
+  const head=`<th class="factor">Factor</th>`+kb.positions.map(p=>`<th style="background:${p.hue}">${esc(p.label)}</th>`).join("");
+  const rows=ordered.map(f=>{
+    const cx=info(f), one=cx.engaged<2;
+    const cells=kb.positions.map(p=>{
+      const w=f.weights[p.id]||"—"; const v=WV[w]||0;
+      const bg=v?rgba(p.hue,.12+.26*v):"transparent";
+      return `<td class="cell" style="background:${bg}">${WLABEL[w]||"—"}</td>`;
+    }).join("");
+    const tag=cx.isCrux?'<span class="cruxbadge">CRUX</span>':(one?'<span class="onetag">one side only</span>':'');
+    return `<tr class="factor-row ${cx.isCrux?'crux':''} ${one?'onesided':''}" data-factor="${f.id}">
+        <td class="factor">${esc(f.label)}${tag}</td>${cells}</tr>
+      <tr><td colspan="${kb.positions.length+1}" style="padding:0;border:0">
+        <div class="rationale" id="r-${f.id}">${esc(f.rationale||"")}</div></td></tr>`;
+  }).join("");
+  const nCrux=a.cruxes.filter(x=>x.isCrux).length;
+  const nOne=a.cruxes.filter(x=>x.engaged<2).length;
+  const nShared=a.cruxes.length-nCrux-nOne;
+  return `<div class="panel"><h3>Where the disagreement actually lives</h3>
+      <p class="hint">a crux = a factor whose weighting spreads ≥ 2 levels across positions · click a row for the rationale</p>
+      <table class="mtx"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>
+      <p style="font-size:13px;color:var(--muted);margin:14px 0 0">
+        <b>${nCrux} crux${nCrux===1?'':'es'}</b> · ${nShared} shared · ${nOne} raised by one side.
+        Resolving the cruxes would move the conclusion; the dimmed rows are dimensions only one camp engages — not points of disagreement.</p></div>`;
+}
+
+function renderIndependence(c){
+  const a=c.assessment;
+  const rows=a.independence.map(p=>{
+    const pn=Math.round(p.concentration*100), conc=p.concentrated, top=p.topDataset;
+    return `<div class="ind-row">
+      <div>
+        <div class="ind-name"><span class="dot" style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${p.hue};margin-right:7px"></span>${esc(p.label)}</div>
+        <div class="ind-sub">${p.raw} source${p.raw===1?"":"s"} · ${p.distinct} distinct dataset${p.distinct===1?"":"s"} · effective ≈ ${p.nEff.toFixed(1)} <span style="color:var(--faint)">(Herfindahl)</span></div>
+        <div class="cmeter" title="${top?esc(top.label)+" backs "+top.count+" of "+p.raw:"—"}">
+          <div class="cmeter-fill" style="width:${pn}%;background:${p.hue}"></div>
+          <div class="cmeter-lab">${top?esc(top.label)+" · "+top.count+" of "+p.raw+" sources":"—"}</div>
+        </div>
+        <div class="ind-sub2">rests on: ${p.datasets.map(esc).join(" · ")||"—"}</div>
+      </div>
+      <div class="ind-readout"><div class="pctn" style="color:${conc?p.hue:'var(--muted)'}">${pn}%</div>
+        <div class="plab">on 1 dataset</div>
+        <div class="plab" style="margin-top:4px;color:${conc?'var(--ochre)':'var(--faint)'}">${conc?'concentrated':'diverse'}</div></div>
+    </div>`;
+  }).join("");
+  const dd=a.dominantDataset;
+  const domLine=dd?`<div class="domline"><span>»</span><span>Most reused evidence base: <b>${dd.labels.map(esc).join(" / ")}</b> — ${dd.labels.length>1?'each ':''}under ${dd.count} of ${dd.total} sources (${pct(dd.share)}) case-wide.</span></div>`:"";
+  const w=a.worstConcentration;
+  const flag=w?`<div class="flagbox"><span>⚠</span><span><b>Apparent consensus is correlated.</b> The "${esc(w.label)}" position lists ${w.raw} sources, but ${w.topDataset.count} of them (${pct(w.concentration)}) rest on one dataset — <b>${esc(w.topDataset.label)}</b>. That's closer to ${w.nEff.toFixed(1)} independent looks than ${w.raw}. Counting sources here overstates the weight of evidence.</span></div>`
+    :`<div class="flagbox"><span>No single dataset dominates a position here — source counts roughly track independent evidence.</span></div>`;
+  return `<div class="panel"><h3>Is the consensus real, or the same data counted twice?</h3>
+      <p class="hint">independence() — concentration of each position's sources on its single most-reused dataset; effective independence via Herfindahl numbers-equivalent</p>
+      ${domLine}${rows}${flag}</div>`;
+}
+
+function renderChanges(c){
+  const kb=c.kb, log=(kb.log||[]).slice().reverse();
+  const items=log.map(e=>{
+    if(e.action==="seed"){
+      return `<div class="ch"><div class="ch-h">v${e.version} · seeded</div>
+        <div class="ch-meta">${esc(e.ts||"")}</div>
+        <div class="ch-diff"><div>${e.sources||kb.sources.length} sources established the initial knowledge base.</div></div></div>`;
+    }
+    const diff=(e.diff||[]).map(line=>{
+      const cls=line.indexOf("⚠")===0?"warn":(line.indexOf("+")===0?"add":"");
+      return `<div class="${cls}">${esc(line)}</div>`;
+    }).join("")||`<div style="color:var(--faint)">(no metric changes)</div>`;
+    return `<div class="ch"><div class="ch-h">v${e.version} · added “${esc(e.title||e.source||"")}”</div>
+      <div class="ch-meta">${esc(e.ts||"")}${e.newDatasets&&e.newDatasets.length?" · new dataset(s): "+e.newDatasets.map(esc).join(", "):""}</div>
+      <div class="ch-diff">${diff}</div></div>`;
+  }).join("");
+  return `<div class="panel"><h3>How the picture changed as evidence arrived</h3>
+    <p class="hint">each entry = one ingested source and what recomputing the metrics revealed · newest first</p>
+    ${items||'<div class="empty">No history yet — only the seed.</div>'}</div>`;
+}
+
+function render(){
+  if(!DATA){el("view").innerHTML='<div class="empty">No data baked in. Run <b>python cli.py build cases/eggs.kb.json cases/covid.kb.json</b> and open the generated <b>viewer/index.html</b>.</div>';return;}
+  renderChrome();
+  const c=cur();
+  let html="";
+  if(state.view==="coverage") html=renderCoverage(c);
+  else if(state.view==="divergence") html=renderDivergence(c);
+  else if(state.view==="independence") html=renderIndependence(c);
+  else html=renderChanges(c);
+  el("view").innerHTML=html;
+  el("foot").innerHTML=`Numbers computed once by <b>engine/assess.py</b> and baked in by <b>cli.py build</b> — the viewer only renders. Seed data is illustrative; provenance is filled by real ingestion (<b>prompts/ingest.md</b>). Adding a source via <b>cli.py ingest</b> then re-running <b>build</b> updates every metric and appends to the Changes tab. All cases share one renderer; a new case needs no UI change.`;
+}
+
+document.addEventListener("click",e=>{
+  const c=e.target.closest("[data-case]");
+  if(c){state.caseId=c.dataset.case;state.filter=null;render();return;}
+  const t=e.target.closest("[data-view]");
+  if(t){state.view=t.dataset.view;render();return;}
+  const pos=e.target.closest("[data-pos]");
+  if(pos){state.filter=state.filter===pos.dataset.pos?null:pos.dataset.pos;render();return;}
+  const fr=e.target.closest("[data-factor]");
+  if(fr){const r=el("r-"+fr.dataset.factor);if(r)r.classList.toggle("show");return;}
+});
+render();
+</script>
+</body>
+</html>

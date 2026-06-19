@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Epistemic Coverage — console</title>
+<style>
+  :root{
+    --bg:#F5F6F7; --surface:#FFFFFF; --ink:#15171B; --muted:#61676E; --faint:#8A9098;
+    --line:#E4E7EA; --line-strong:#CDD2D7; --chrome:#1B1D24; --accent:#2f6296;
+    --ok:#2E8B6F; --okbg:#E6F2ED; --warn:#8a6510; --warnbg:#F5ECD6; --errbg:#F6E7E4; --err:#B4502E;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;} html,body{margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:840px;margin:0 auto;padding:30px 22px 90px;}
+  .brand{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-family:var(--mono);}
+  h1{font-size:23px;font-weight:600;margin:6px 0 2px;letter-spacing:-.01em;}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;}
+  .card.sub-card{background:#FBFCFC;}
+  .step{font-family:var(--mono);font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;}
+  h2{font-size:16px;font-weight:600;margin:3px 0 4px;}
+  .desc{font-size:13px;color:var(--muted);margin:0 0 12px;}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px;}
+  input,select,textarea{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line-strong);border-radius:8px;padding:9px 11px;}
+  textarea{font-family:var(--mono);font-size:12.5px;resize:vertical;}
+  input[type=file]{padding:7px;border-style:dashed;background:#FAFBFB;}
+  .row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;}
+  .chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);margin:9px 0 0;cursor:pointer;}
+  .chk input{width:auto;}
+  .row .src{flex:0 0 160px;min-width:0;}
+  .row>div{flex:1;min-width:150px;} .row .narrow{flex:0 0 90px;min-width:0;} .row .auto{flex:0 0 auto;}
+  button{appearance:none;border:0;border-radius:8px;font:inherit;font-size:14px;font-weight:500;padding:9px 15px;cursor:pointer;background:var(--chrome);color:#fff;}
+  button.ghost{background:transparent;color:var(--accent);border:1px solid var(--line-strong);}
+  button.sm{font-size:12px;padding:5px 10px;}
+  button:disabled{opacity:.45;cursor:default;}
+  .hint{font-size:12.5px;color:var(--faint);margin:6px 0 0;}
+  .ground{font-size:12.5px;color:var(--ok);background:var(--okbg);border-radius:8px;padding:8px 11px;margin:10px 0 0;}
+  .toast{font-size:13px;border-radius:8px;padding:9px 12px;margin-top:10px;display:none;}
+  .toast.show{display:block;} .toast.ok{background:var(--okbg);color:var(--ok);} .toast.err{background:var(--errbg);color:var(--err);} .toast.warn{background:var(--warnbg);color:var(--warn);}
+  .results{margin-top:12px;} .res{border:1px solid var(--line);border-left-width:3px;border-radius:9px;padding:10px 13px;margin:8px 0;}
+  .res.added{border-left-color:var(--ok);} .res.duplicate{border-left-color:var(--warn);} .res.error{border-left-color:var(--err);}
+  .res .t{font-size:14px;font-weight:600;} .res .tag{font-family:var(--mono);font-size:11px;color:var(--faint);}
+  .diff{font-family:var(--mono);font-size:12px;color:var(--muted);margin:6px 0 0;} .diff div{margin:2px 0;} .diff div.warn{color:var(--warn);} .diff div.add{color:var(--accent);}
+  .muted{color:var(--muted);} a{color:var(--accent);}
+  .pill{font-family:var(--mono);font-size:11px;background:#EEF0F1;color:var(--muted);border-radius:6px;padding:2px 7px;}
+  .badge{font-family:var(--mono);font-size:11px;border-radius:6px;padding:3px 9px;}
+  .badge.auto{background:var(--okbg);color:var(--ok);} .badge.manual{background:#EEF0F1;color:var(--muted);}
+  .toprow{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;}
+  .cand{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin:7px 0;}
+  .cand input{width:auto;margin-top:3px;} .cand .cm{flex:1;min-width:0;} .cand .ct{font-size:13.5px;font-weight:600;word-break:break-word;}
+  .cand .cu{font-size:12px;color:var(--accent);word-break:break-all;} .cand .cw{font-size:12px;color:var(--muted);}
+  .promptcard{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin:8px 0;background:#FBFCFC;}
+  .promptcard .ph{display:flex;justify-content:space-between;align-items:center;}
+  details summary{cursor:pointer;font-size:14px;font-weight:500;color:var(--accent);}
+  .divider{height:1px;background:var(--line);margin:12px 0;}
+  #log{display:none;background:#15171B;color:#D7DBE0;border-radius:10px;padding:12px 14px;margin:12px 0 0;
+    font-family:var(--mono);font-size:12px;line-height:1.5;max-height:220px;overflow:auto;white-space:pre-wrap;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="toprow">
+    <div>
+      <div class="brand">Epistemic Coverage</div>
+      <h1>Research console</h1>
+      <div class="sub">Find sources → let the AI label the <i>real</i> text we fetch → review what changed.</div>
+    </div>
+    <div style="text-align:right">
+      <span class="badge manual" id="modeBadge">…</span><br>
+      <span class="hint" id="modelLine"></span><br>
+      <button class="ghost sm" id="openViewer" style="margin-top:8px">Open viewer ↗</button>
+    </div>
+  </div>
+  <div class="card" id="keyCard" style="display:none;border-color:var(--line-strong)">
+    <div class="step">Auto mode · API key</div>
+    <h2>Add an API key for automatic labelling</h2>
+    <p class="desc">No key found in the environment. Finding &amp; fetching still work without one,
+    but auto-labelling needs a key. Paste one here for this session, or add it to a <b>.env</b>
+    file (copy <code>.env.example</code>) so it loads every time. The key stays on this machine.</p>
+    <div class="row">
+      <div><label for="keyIn">API key (Anthropic or OpenAI)</label>
+        <input id="keyIn" type="password" placeholder="sk-ant-… or sk-…" autocomplete="off"></div>
+      <button id="keyBtn">Use key</button>
+    </div>
+    <div class="toast" id="keyToast"></div>
+  </div>
+  <pre id="log"></pre>
+
+  <!-- 1. Case -->
+  <div class="card">
+    <div class="step">Step 1 · Case</div>
+    <h2>Choose or create a question</h2>
+    <div class="row">
+      <div><label for="caseSel">Existing case</label><select id="caseSel"></select></div>
+      <button class="ghost auto" id="newToggle">+ New</button>
+    </div>
+    <div id="newBox" style="display:none">
+      <div class="row" style="margin-top:6px">
+        <div class="narrow"><label for="newId">id</label><input id="newId" placeholder="salt"></div>
+        <div><label for="newQ">question</label><input id="newQ" placeholder="Does dietary salt raise cardiovascular risk?"></div>
+        <button class="auto" id="createBtn">Create</button>
+      </div>
+    </div>
+    <div class="hint" id="caseInfo"></div>
+  </div>
+
+  <!-- Portal sync -->
+  <div class="card">
+    <div class="step">Portal · sync</div>
+    <h2>Pull &amp; push to a shared portal</h2>
+    <p class="desc">Work on questions from a shared portal here with your own key (fully
+    automatic), then push the result back. The portal never sees your key.</p>
+    <div class="row">
+      <div><label for="portalUrl">Portal URL</label><input id="portalUrl" placeholder="http://localhost:8810"></div>
+      <button class="ghost" id="portalListBtn">List remote</button>
+      <button class="ghost" id="portalPushBtn">Push current case →</button>
+    </div>
+    <div class="toast" id="portalToast"></div>
+    <div id="portalList" class="results"></div>
+  </div>
+
+  <!-- One click -->
+  <div class="card" id="oneClickCard" style="border-color:var(--line-strong)">
+    <div class="step">One click</div>
+    <h2>Do it all</h2>
+    <p class="desc">Find sources, fetch their real text, label, and import — automatically. <span id="ocMode" class="muted"></span></p>
+    <div class="row">
+      <div class="narrow"><label for="ock"># sources</label><input id="ock" type="number" value="12" min="1"></div>
+      <div class="src"><label for="ocSource">Where to look</label><select id="ocSource">
+        <option value="api">Papers · OpenAlex</option>
+        <option value="web">AI web search</option>
+        <option value="both">Both (merge)</option></select></div>
+      <button id="runAllBtn">Do it all ▸</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="ocDeep"> Deep research — many searches, more thorough (web/both only)</label>
+    <div class="toast" id="ocToast"></div>
+    <div class="results" id="ocResults"></div>
+  </div>
+
+  <p class="desc" style="text-align:center;margin:18px 0 0">— or run the steps yourself —</p>
+
+  <!-- 2. Find -->
+  <div class="card">
+    <div class="step">Step 2 · Find</div>
+    <h2>Find candidate sources</h2>
+    <p class="desc">Search across the different positions. <span id="findMode"></span></p>
+    <div class="row">
+      <div class="narrow"><label for="k"># sources</label><input id="k" type="number" value="12" min="1"></div>
+      <div class="src"><label for="findSource">Where to look</label><select id="findSource">
+        <option value="api">Papers · OpenAlex</option>
+        <option value="web">AI web search</option>
+        <option value="both">Both (merge)</option></select></div>
+      <button id="findBtn">Find sources</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="findDeep"> Deep research — many searches, more thorough (web/both only)</label>
+    <div class="toast ok" id="findToast"></div>
+    <div id="findManual" style="display:none">
+      <label for="candIn" style="margin-top:12px">Paste the chatbot's list of sources (JSON array)</label>
+      <textarea id="candIn" rows="5" placeholder='[ { "title":"...", "url":"https://...", "why":"..." } ]'></textarea>
+      <button class="ghost sm" id="loadCandBtn" style="margin-top:8px">Load list</button>
+    </div>
+    <div id="candidates" class="results"></div>
+  </div>
+
+  <!-- 3. Fetch & label -->
+  <div class="card">
+    <div class="step">Step 3 · Fetch &amp; label</div>
+    <h2>Fetch the real text, then label it</h2>
+    <div class="ground">✓ We download each article ourselves (with a reader-proxy fallback for blocked sites) and ask the AI to label <b>only the text we fetched</b> — it can't invent contents. Pages we can't reach are skipped, not guessed.</div>
+    <div class="row" style="margin-top:12px">
+      <button id="fetchBtn" disabled>Fetch &amp; label selected</button>
+      <span class="hint" id="fetchHint">Select sources above first.</span>
+    </div>
+    <div class="toast warn" id="fetchToast"></div>
+    <div id="extractOut"></div>
+  </div>
+
+  <!-- 4. Import -->
+  <div class="card">
+    <div class="step">Step 4 · Import</div>
+    <h2>Paste the labelled JSON</h2>
+    <p class="desc">From step 3, the single-source tool, or any chatbot. One object or an array — code fences are fine.</p>
+    <textarea id="jsonIn" rows="7" placeholder='[ { "source": { "title":"...", "position":"...", "restsOn":["..."] }, "factorWeights":[ ... ] } ]'></textarea>
+    <div class="row" style="margin-top:10px"><button id="addBtn">Import to knowledge base</button></div>
+    <div class="toast err" id="addErr"></div>
+    <div class="results" id="results"></div>
+  </div>
+
+  <!-- Curate -->
+  <div class="card">
+    <div class="step">Curate</div>
+    <h2>Merge duplicates &amp; tidy labels</h2>
+    <p class="desc">Fold paraphrase duplicates (e.g. three "mixed women" populations) into one, or rename messy labels. Recomputes every metric.</p>
+    <button class="ghost sm" id="curLoad">Load entities</button>
+    <button class="ghost sm" id="curTidy">Tidy slug labels</button>
+    <div id="curDup"></div>
+    <div id="curManual" style="display:none">
+      <div class="divider"></div>
+      <label for="curType">Entity type</label>
+      <select id="curType" style="max-width:240px">
+        <option value="position">positions</option>
+        <option value="dataset">datasets</option>
+        <option value="factor">factors</option>
+        <option value="population">populations</option>
+        <option value="evidence">evidence types</option>
+      </select>
+      <div class="row" style="margin-top:8px">
+        <div><label for="curSrc">Fold this…</label><select id="curSrc"></select></div>
+        <div><label for="curDst">…into this (kept)</label><select id="curDst"></select></div>
+        <button id="curMerge">Merge</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div><label for="curRen">Rename</label><select id="curRen"></select></div>
+        <div><label for="curLabel">New label</label><input id="curLabel" placeholder="UK Biobank"></div>
+        <button id="curRenameBtn" class="ghost">Rename</button>
+      </div>
+      <div class="toast ok" id="curToast"></div>
+    </div>
+  </div>
+
+  <!-- Quick add -->
+  <div class="card sub-card">
+    <div class="step">Add one source</div>
+    <h2>From a link or a document</h2>
+    <div class="row">
+      <div><label for="oneUrl">URL</label><input id="oneUrl" placeholder="https://… (paper, guideline, analysis)"></div>
+      <button id="oneUrlBtn" class="auto">Fetch</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div><label for="oneFile">…or a document (PDF / docx / txt)</label><input id="oneFile" type="file" accept=".pdf,.docx,.txt,.html"></div>
+      <button id="oneFileBtn" class="auto">Upload</button>
+    </div>
+    <div class="toast ok" id="oneToast"></div>
+    <div id="oneOut"></div>
+  </div>
+
+  <!-- One-shot (secondary) -->
+  <div class="card sub-card">
+    <details>
+      <summary>Fast one-shot prompt (chatbot browses on its own)</summary>
+      <p class="desc" style="margin-top:10px">One prompt that asks the chatbot to find <i>and</i> read sources itself. Faster, but the labels are only as good as the chatbot's own browsing — the Step 2–3 flow above is more trustworthy because we fetch the text. </p>
+      <div class="row"><div class="narrow"><label for="osk"># sources</label><input id="osk" type="number" value="20" min="1"></div>
+        <button id="oneShotBtn">Generate &amp; copy prompt</button></div>
+      <div class="toast ok" id="osToast">Copied — paste into a browsing chatbot, then paste its JSON into Step 4.</div>
+      <textarea id="osOut" rows="4" readonly style="margin-top:10px" placeholder="…"></textarea>
+    </details>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const api=(p,b)=>fetch(p,{method:b?"POST":"GET",headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined})
+  .then(async r=>{const j=await r.json();if(!r.ok)throw new Error(j.error||"error");return j;});
+const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const copy=async t=>{try{await navigator.clipboard.writeText(t);}catch(_){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();}};
+const toast=(el,msg,cls)=>{el.className="toast show "+(cls||"ok");if(msg!=null)el.textContent=msg;setTimeout(()=>el.classList.remove("show"),5000);};
+let CASES=[], HASKEY=false, MODE=null, CANDS=[];
+const isAuto=()=>MODE==="auto";
+function renderMode(){
+  const b=$("#modeBadge");
+  if(isAuto()){b.className="badge auto";b.textContent="Auto · click to switch to manual";}
+  else{b.className="badge manual";b.textContent=HASKEY?"Manual · click to switch to auto":"Manual · no API key";}
+  b.style.cursor=HASKEY?"pointer":"default";
+  $("#findMode").textContent=isAuto()?"Runs automatically.":"You'll copy a prompt into a chatbot and paste its list back.";
+  $("#runAllBtn").disabled=!isAuto();
+  $("#ocMode").textContent=isAuto()?"Runs with your API key.":(HASKEY?"Switch the badge to Auto to use this.":"Needs an API key — use the steps below to do it by hand.");
+}
+$("#modeBadge").addEventListener("click",()=>{if(!HASKEY)return;MODE=isAuto()?"manual":"auto";renderMode();});
+const caseId=()=>$("#caseSel").value;
+const need=()=>{if(!caseId()){alert("Choose or create a case first.");return false;}return true;};
+
+async function loadCases(keep){
+  let j;
+  try{ j=await api("/api/cases"); }
+  catch(e){ $("#caseInfo").innerHTML='<span style="color:var(--err)">Could not reach the server ('+esc(e.message)+'). Is <b>python cli.py ui</b> still running? Try reloading.</span>'; return; }
+  CASES=j.cases||[]; HASKEY=j.hasKey;
+  if(MODE===null) MODE=HASKEY?"auto":"manual";  // default by key, but the user can toggle
+  if(!$("#portalUrl").value) $("#portalUrl").value = localStorage.getItem("portalUrl") || j.portal || "";
+  $("#keyCard").style.display = HASKEY ? "none" : "block";
+  $("#modelLine").textContent = j.model ? "model: "+j.model : "";
+  renderMode();
+  const sel=$("#caseSel");
+  sel.innerHTML=CASES.map(c=>`<option value="${c.id}">${esc(c.id)} — ${esc(c.question||"(no question)")}</option>`).join("")||`<option value="">(none — create one)</option>`;
+  if(keep&&CASES.some(c=>c.id===keep))sel.value=keep;
+  showInfo();
+}
+function showInfo(){const c=CASES.find(x=>x.id===caseId());
+  $("#caseInfo").innerHTML=c?`<span class="pill">v${c.version}</span> ${c.sources} source(s) · <span class="muted">${esc(c.question)}</span>`:"";}
+$("#caseSel").addEventListener("change",showInfo);
+
+// ---- API key (when none in env)
+$("#keyBtn").addEventListener("click",()=>busy($("#keyBtn"),async()=>{
+  const key=$("#keyIn").value.trim();
+  if(!key){toast($("#keyToast"),"Paste a key first.","warn");return;}
+  const r=await api("/api/key",{key});
+  if(r.error){toast($("#keyToast"),r.error,"warn");return;}
+  $("#keyIn").value="";
+  MODE=null;                       // re-default to auto now that a key exists
+  await loadCases(caseId());
+  toast($("#keyToast"),"Key set for this session ("+esc(r.model)+"). Auto mode enabled.","ok");
+},"Saving…"));
+
+// ---- portal sync (pull / push)
+const portalUrl=()=>{const u=$("#portalUrl").value.trim();if(u)localStorage.setItem("portalUrl",u);return u;};
+$("#portalListBtn").addEventListener("click",()=>busy($("#portalListBtn"),async()=>{
+  const r=await api("/api/portal/list",{url:portalUrl()});
+  const qs=r.questions||[];
+  $("#portalList").innerHTML = qs.length? qs.map(q=>{
+    const c=q.counts||{};
+    return `<div class="cand"><div style="flex:1"><b>${esc(q.question)}</b>
+      <span class="hint">v${c.version||0} · ${c.sources||0} sources · ${esc(q.id)}</span></div>
+      <button class="ghost sm" data-pull="${esc(q.id)}">Pull ↓</button></div>`;
+  }).join('') : '<div class="hint">No questions on the portal yet.</div>';
+  $("#portalList").querySelectorAll("[data-pull]").forEach(b=>b.addEventListener("click",()=>pullQ(b.dataset.pull)));
+  toast($("#portalToast"),`Found ${qs.length} remote question(s).`,"ok");
+},"Listing…"));
+async function pullQ(id){try{
+  const r=await api("/api/portal/pull",{url:portalUrl(),id});
+  await loadCases(r.id);
+  toast($("#portalToast"),`Pulled “${r.question}” (v${r.version}) into local cases.`,"ok");
+}catch(e){toast($("#portalToast"),e.message,"warn");}}
+$("#portalPushBtn").addEventListener("click",()=>{if(!need())return;busy($("#portalPushBtn"),async()=>{
+  const r=await api("/api/portal/push",{url:portalUrl(),id:caseId()});
+  await loadCases(caseId());
+  toast($("#portalToast"),`Pushed “${esc(r.question)}” → portal (now v${r.version}).`,"ok");
+},"Pushing…");});
+$("#newToggle").addEventListener("click",()=>{const b=$("#newBox");b.style.display=b.style.display==="none"?"block":"none";});
+$("#createBtn").addEventListener("click",async()=>{try{const r=await api("/api/init",{id:$("#newId").value,question:$("#newQ").value});
+  $("#newBox").style.display="none";$("#newId").value="";$("#newQ").value="";await loadCases(r.id);}catch(e){alert(e.message);}});
+
+// ---- Do it all
+$("#runAllBtn").addEventListener("click",()=>{if(!need())return;busy($("#runAllBtn"),async()=>{
+  toast($("#ocToast"),"Searching, fetching & labelling… this can take a minute.","warn");
+  const r=await api("/api/run-all",{id:caseId(),k:$("#ock").value,source:$("#ocSource").value,deep:$("#ocDeep").checked});
+  renderResults(r.results||[],$("#ocResults"));
+  await loadCases(caseId());await api("/api/build",{});
+  const skip=r.skipped&&r.skipped.length?` · ${r.skipped.length} skipped (couldn't fetch)`:"";
+  toast($("#ocToast"),`Done — found ${r.candidates}, fetched ${r.fetched}${skip}, imported.`,"ok");
+},"Working…",true);});
+
+// ---- live progress log (polls /api/progress while a long op runs)
+let _poll=null;
+function startLog(){const b=$("#log");b.style.display="block";b.textContent="working…";
+  const tick=async()=>{try{const {lines}=await api("/api/progress");if(lines&&lines.length){b.textContent=lines.join("\n");b.scrollTop=b.scrollHeight;}}catch(_){}};
+  tick();_poll=setInterval(tick,1200);}
+function stopLog(){if(_poll)clearInterval(_poll);_poll=null;
+  api("/api/progress").then(({lines})=>{if(lines&&lines.length)$("#log").textContent=lines.join("\n");}).catch(()=>{});}
+
+// ---- Step 2: find
+async function busy(btn,fn,label,withLog){const old=btn.textContent;btn.disabled=true;btn.textContent=label||"Working…";
+  if(withLog)startLog();
+  try{await fn();}catch(e){alert(e.message);}
+  if(withLog)stopLog();
+  btn.disabled=false;btn.textContent=old;}
+$("#findBtn").addEventListener("click",()=>{if(!need())return;const src=$("#findSource").value,deep=$("#findDeep").checked;
+  busy($("#findBtn"),async()=>{
+  const r=await api("/api/discover",{id:caseId(),k:$("#k").value,apply:isAuto(),source:src,deep:deep});
+  if(r.candidates&&r.candidates.length)renderCandidates(r.candidates);
+  if(r.mode==="manual"){await copy(r.prompt);$("#findManual").style.display="block";
+    const got=r.candidates&&r.candidates.length?`${r.candidates.length} found via OpenAlex. Web prompt copied — paste into your chatbot for more, then add its list below.`:"Prompt copied — paste into your chatbot, then paste its list below.";
+    toast($("#findToast"),got,"ok");}
+  else toast($("#findToast"),`Found ${(r.candidates||[]).length} candidates.`,"ok");
+},"Finding…",isAuto()||src!=="api");});
+$("#loadCandBtn").addEventListener("click",()=>{try{const a=JSON.parse($("#candIn").value);renderCandidates(Array.isArray(a)?a:[]);}catch(e){alert("That isn't valid JSON: "+e.message);}});
+
+const cleanUrl=u=>{u=(u||"").trim();const m=u.match(/\((https?:\/\/[^)\s]+)\)/);if(m)return m[1];const b=u.match(/https?:\/\/[^\s\]\)>]+/);return b?b[0]:u;};
+function renderCandidates(list){
+  CANDS=list.filter(c=>c&&c.url).map(c=>({...c,url:cleanUrl(c.url)}));
+  const box=$("#candidates");
+  if(!CANDS.length){box.innerHTML='<div class="hint">No candidates with URLs.</div>';return;}
+  box.innerHTML=`<div class="row" style="margin:10px 0 4px"><label style="margin:0"><input type="checkbox" id="selAll" checked style="width:auto"> Select all (${CANDS.length})</label></div>`+
+    CANDS.map((c,i)=>`<div class="cand"><input type="checkbox" class="candck" data-i="${i}" checked>
+      <div class="cm"><div class="ct">${esc(c.title||c.url)}</div><div class="cu">${esc(c.url)}</div>${c.why?`<div class="cw">${esc(c.why)}</div>`:""}</div></div>`).join("");
+  $("#selAll").addEventListener("change",e=>document.querySelectorAll(".candck").forEach(ck=>ck.checked=e.target.checked));
+  updateFetch();
+  document.querySelectorAll(".candck").forEach(ck=>ck.addEventListener("change",updateFetch));
+}
+function selectedUrls(){return [...document.querySelectorAll(".candck")].filter(c=>c.checked).map(c=>CANDS[+c.dataset.i].url);}
+function updateFetch(){const n=selectedUrls().length;$("#fetchBtn").disabled=!n;$("#fetchHint").textContent=n?`${n} selected.`:"Select sources above first.";}
+
+// ---- Step 3: fetch & label
+$("#fetchBtn").addEventListener("click",()=>{const urls=selectedUrls();if(!urls.length)return;busy($("#fetchBtn"),async()=>{
+  const r=await api("/api/extract",{id:caseId(),urls,apply:isAuto(),batch:8});
+  const skip=r.skipped&&r.skipped.length?` · ${r.skipped.length} skipped (couldn't fetch)`:"";
+  if(r.mode==="manual"||r.prompts){
+    renderPrompts(r.prompts||[]);
+    toast($("#fetchToast"),`Fetched ${r.fetched} source(s)${skip}. Prompt${(r.prompts||[]).length>1?"s":""} ready below — copy, paste into your chatbot, then paste the JSON into Step 4.`,"warn");
+  }else{
+    renderResults(r.results||[]);await loadCases(caseId());await api("/api/build",{});
+    toast($("#fetchToast"),`Fetched ${r.fetched}${skip}; labelled & imported.`,"ok");
+  }
+  if(r.skipped&&r.skipped.length)$("#extractOut").insertAdjacentHTML("beforeend",
+    `<div class="hint">Skipped: ${r.skipped.map(s=>esc(s.target)).join(", ")}</div>`);
+},"Fetching & labelling…",true);});
+
+function renderPrompts(prompts){
+  const note=prompts.length>1
+    ? `<p class="hint">The sources were split into ${prompts.length} prompts so the chatbot's reply doesn't get cut off. Do them one at a time: <b>copy a prompt → paste into your chatbot → it returns a JSON array → paste that into Step 4 and Import</b>. Then repeat for the next. Importing more than once is fine — duplicates are skipped, so you don't need to merge them into one file.</p>`
+    : `<p class="hint">Copy → paste into your chatbot → it returns a JSON array → paste that into Step 4 and Import.</p>`;
+  $("#extractOut").innerHTML=note+prompts.map((p,i)=>`<div class="promptcard"><div class="ph"><b>Extraction prompt ${prompts.length>1?(i+1)+"/"+prompts.length:""}</b>
+    <button class="ghost sm" data-i="${i}">Copy</button></div></div>`).join("");
+  $("#extractOut")._prompts=prompts;
+  $("#extractOut").querySelectorAll("button[data-i]").forEach(b=>b.addEventListener("click",async()=>{
+    await copy(prompts[+b.dataset.i]);b.textContent="Copied ✓";setTimeout(()=>b.textContent="Copy",1500);}));
+}
+
+// ---- Step 4: import
+$("#addBtn").addEventListener("click",()=>{if(!need())return;const text=$("#jsonIn").value.trim();
+  if(!text)return toast($("#addErr"),"Paste the labelled JSON first.","err");
+  busy($("#addBtn"),async()=>{const {results}=await api("/api/add",{id:caseId(),text});
+    renderResults(results);await loadCases(caseId());await api("/api/build",{});},"Importing…");});
+
+function renderResults(results,box){
+  box=box||$("#results");const added=results.filter(r=>r.status==="added").length;
+  box.innerHTML=`<div class="hint">${added} of ${results.length} added.</div>`+results.map(r=>{
+    if(r.status==="added"){const diff=(r.diff||[]).map(l=>{const c=l[0]==="⚠"?"warn":(l[0]==="+"?"add":"");return `<div class="${c}">${esc(l)}</div>`;}).join("")||'<div class="muted">(no metric change)</div>';
+      const news=[].concat(r.newDatasets||[],r.newPositions||[],r.newFactors||[]);
+      return `<div class="res added"><div class="t">✓ ${esc(r.title||r.id)}</div><div class="tag">now v${r.version}${news.length?" · new: "+news.map(esc).join(", "):""}</div><div class="diff">${diff}</div></div>`;}
+    if(r.status==="duplicate")return `<div class="res duplicate"><div class="t">↺ ${esc(r.title||"source")}</div><div class="tag">already in the KB — skipped (anti-flooding)</div></div>`;
+    return `<div class="res error"><div class="t">✕ ${esc(r.title||"source")}</div><div class="tag">${esc(r.error)}</div></div>`;
+  }).join("");
+  if(added)$("#jsonIn").value="";
+}
+
+// ---- Quick add: one URL
+$("#oneUrlBtn").addEventListener("click",()=>{if(!need())return;const u=$("#oneUrl").value.trim();if(!u)return alert("Paste a URL.");
+  busy($("#oneUrlBtn"),async()=>{const r=await api("/api/extract",{id:caseId(),urls:[u],apply:isAuto(),batch:1});
+    if(r.skipped&&r.skipped.length)return toast($("#oneToast"),"Couldn't fetch that URL (blocked or offline). Try the document upload instead.","err");
+    if(r.mode==="manual"||r.prompts){await copy((r.prompts||[])[0]||"");toast($("#oneToast"),"Fetched & prompt copied — paste into your chatbot, then paste the JSON into Step 4.","ok");}
+    else{renderResults(r.results||[]);await loadCases(caseId());await api("/api/build",{});toast($("#oneToast"),"Fetched, labelled & imported.","ok");}
+  },"Fetching…");});
+
+// ---- Quick add: one file
+$("#oneFileBtn").addEventListener("click",()=>{if(!need())return;const f=$("#oneFile").files[0];if(!f)return alert("Choose a file.");
+  busy($("#oneFileBtn"),()=>new Promise((res,rej)=>{const fr=new FileReader();
+    fr.onload=async()=>{try{const r=await api("/api/add-file",{id:caseId(),filename:f.name,b64:fr.result,apply:isAuto()});
+      if(r.mode==="manual"){await copy(r.prompt);toast($("#oneToast"),`Read “${esc(r.title)}” & prompt copied — paste into your chatbot, then paste the JSON into Step 4.`,"ok");}
+      else{renderResults(r.results||[]);await loadCases(caseId());await api("/api/build",{});toast($("#oneToast"),"Read, labelled & imported.","ok");}
+      res();}catch(e){rej(e);}};
+    fr.onerror=()=>rej(new Error("couldn't read file"));fr.readAsDataURL(f);}),"Reading…");});
+
+// ---- One-shot
+$("#oneShotBtn").addEventListener("click",()=>{if(!need())return;busy($("#oneShotBtn"),async()=>{
+  const {prompt}=await api("/api/research",{id:caseId(),k:$("#osk").value});$("#osOut").value=prompt;await copy(prompt);toast($("#osToast"),null,"ok");},"…");});
+
+// ---- Curate (merge duplicates / rename)
+let ENT=null;
+const entLabel=(kind,ref)=>{const e=(ENT[kind]||[]).find(x=>x.id===ref);return e?e.label:ref;};
+const entCount=(kind,ref)=>{const e=(ENT[kind]||[]).find(x=>x.id===ref);return e?e.count:0;};
+function entOptions(kind){return (ENT[kind]||[]).map(e=>`<option value="${esc(e.id)}">${esc(e.label)}${e.count?` (${e.count})`:""}</option>`).join("");}
+function fillCurSelects(){const t=$("#curType").value;["#curSrc","#curDst","#curRen"].forEach(s=>$(s).innerHTML=entOptions(t));}
+function renderDups(){
+  const sug=ENT.suggestions||{},box=$("#curDup"),rows=[];
+  Object.keys(sug).forEach(kind=>sug[kind].forEach(p=>rows.push({kind,a:p.a,b:p.b,sim:p.sim})));
+  if(!rows.length){box.innerHTML='<div class="hint" style="margin-top:8px">No likely duplicates flagged. You can still merge manually below.</div>';return;}
+  box.innerHTML='<div class="hint" style="margin:10px 0 4px">Possible duplicates — keeps the more-used label:</div>'+rows.map((r,i)=>{
+    // keep the higher-count side
+    const keepB=entCount(r.kind,r.b.ref)>=entCount(r.kind,r.a.ref);
+    const keep=keepB?r.b:r.a,drop=keepB?r.a:r.b;
+    return `<div class="cand"><div class="cm"><div class="ct"><span class="tag">${r.kind}</span> fold “${esc(drop.label)}” → keep “${esc(keep.label)}” <span class="muted">(${r.sim})</span></div></div>
+      <button class="ghost sm" data-i="${i}">Merge</button></div>`;}).join("");
+  box.querySelectorAll("button[data-i]").forEach(b=>b.addEventListener("click",()=>{const r=rows[+b.dataset.i];
+    const keepB=entCount(r.kind,r.b.ref)>=entCount(r.kind,r.a.ref);doMerge(r.kind,(keepB?r.a:r.b).ref,(keepB?r.b:r.a).ref);}));
+}
+async function refreshEnt(){ENT=await api("/api/entities",{id:caseId()});$("#curManual").style.display="block";renderDups();fillCurSelects();}
+async function doMerge(kind,src,dst){if(src===dst)return alert("Pick two different entities.");
+  try{const r=await api("/api/merge",{id:caseId(),type:kind,src,dst});ENT=r.entities;renderDups();fillCurSelects();await loadCases(caseId());toast($("#curToast"),r.report.summary,"ok");}
+  catch(e){alert(e.message);}}
+$("#curLoad").addEventListener("click",()=>{if(!need())return;refreshEnt().catch(e=>alert(e.message));});
+$("#curTidy").addEventListener("click",async()=>{if(!need())return;
+  try{const r=await api("/api/tidy",{id:caseId()});ENT=r.entities;$("#curManual").style.display="block";renderDups();fillCurSelects();await loadCases(caseId());toast($("#curToast"),r.report.summary,"ok");}
+  catch(e){alert(e.message);}});
+$("#curType").addEventListener("change",fillCurSelects);
+$("#curMerge").addEventListener("click",()=>doMerge($("#curType").value,$("#curSrc").value,$("#curDst").value));
+$("#curRenameBtn").addEventListener("click",async()=>{const label=$("#curLabel").value.trim();if(!label)return alert("Enter a new label.");
+  try{const r=await api("/api/rename",{id:caseId(),type:$("#curType").value,ref:$("#curRen").value,label});ENT=r.entities;renderDups();fillCurSelects();$("#curLabel").value="";await loadCases(caseId());toast($("#curToast"),r.report.summary,"ok");}
+  catch(e){alert(e.message);}});
+
+// open synchronously inside the click (an await first would let popup-blockers kill it);
+// /viewer rebuilds itself server-side, so it's always fresh.
+$("#openViewer").addEventListener("click",()=>{window.open("/viewer","_blank");});
+loadCases();
+</script>
+</body>
+</html>

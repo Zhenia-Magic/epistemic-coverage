@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+
+# local dev sqlite store (Postgres in production via DATABASE_URL)
+data/
+
+# secrets / local config (use .env.example as the template)
+.env
+
+# generated prompt/delta files
+out/
+
+# editor/harness local config (machine-specific paths)
+.claude/
