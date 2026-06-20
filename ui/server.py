@@ -95,7 +95,10 @@ def list_cases():
             kb = _read(p)
         except Exception:
             continue
-        out.append({"id": kb["meta"]["id"], "question": kb["meta"].get("question", ""),
+        # id is the FILENAME (so _case_path round-trips) — NOT kb.meta.id, which can differ for
+        # pulled portal cases (file is named by portal id, but meta.id keeps the original slug).
+        cid = os.path.basename(p)[:-len(".kb.json")]
+        out.append({"id": cid, "question": kb["meta"].get("question", ""),
                     "version": kb["meta"].get("version", 0), "sources": len(kb.get("sources", []))})
     return out
 
