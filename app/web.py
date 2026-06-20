@@ -206,16 +206,22 @@ def contribute_html(qid, get_question):
       b.innerHTML=`<p class="toast ok">Fetched ${j.fetched} source(s)${skip}.</p>
         <p class="desc">Upload this one file to your chatbot (or copy it), tell it to follow the
         instructions inside, then paste the JSON array it returns into Step 3.</p>
-        <div style="margin:8px 0"><button class="btn" onclick="dlBundle()">⬇ Download labelling file</button>
-        &nbsp;<button class="btn ghost" onclick="copyBundle()">Copy instead</button></div>`;
+        <div style="margin:8px 0"><button class="btn" onclick="dlBundle(this)">⬇ Download labelling file</button>
+        &nbsp;<button class="btn ghost" onclick="copyBundle(this)">Copy instead</button></div>`;
     }
-    function dlBundle(){
+    function flash(btn,msg){if(!btn)return;const t=btn.textContent;btn.textContent=msg;
+      btn.disabled=true;setTimeout(()=>{btn.textContent=t;btn.disabled=false;},1500);}
+    function dlBundle(btn){
       const blob=new Blob([BUNDLE],{type:'text/markdown'});
       const a=document.createElement('a');a.href=URL.createObjectURL(blob);
       a.download='label-sources.md';document.body.appendChild(a);a.click();a.remove();
       setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+      flash(btn,'Downloaded ✓');
     }
-    function copyBundle(){navigator.clipboard.writeText(BUNDLE);}
+    function copyBundle(btn){
+      navigator.clipboard.writeText(BUNDLE).then(()=>flash(btn,'Copied ✓'))
+        .catch(()=>flash(btn,'Copy failed — select & copy manually'));
+    }
     async function importDelta(){
       let data; try{data=JSON.parse(document.getElementById('delta').value);}catch(e){return toast('Not valid JSON: '+e.message,'warn');}
       const r=await fetch(`/api/questions/${QID}/delta`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({delta:data})});
