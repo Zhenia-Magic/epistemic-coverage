@@ -68,16 +68,185 @@
       "newPositions": [
         "pos_residual_concern"
       ]
+    },
+    {
+      "version": 5,
+      "action": "add-source",
+      "source": "src_the_quantum_frontier_the_large_hadron_collid_2009",
+      "title": "The quantum frontier: the large hadron collider",
+      "ts": "2026-06-20T22:20:25.254807+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 3 → 4",
+        "concentration: No risk 100% → 75% (top: Cosmic-ray safety argument)",
+        "blindspot opened: Residual concern missing \"Expert review\""
+      ]
+    },
+    {
+      "version": 6,
+      "action": "add-source",
+      "source": "src_study_of_potentially_dangerous_events_during_2003",
+      "title": "Study of Potentially Dangerous Events During Heavy-Ion Collisions at the LHC (CERN-2003-001)",
+      "ts": "2026-06-20T22:20:25.255557+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 4 → 5",
+        "concentration: No risk 75% → 80% (top: Cosmic-ray safety argument)",
+        "most-reused case-wide: Cosmic-ray safety argument 3 → Cosmic-ray safety argument 4/6",
+        "+ new crux: Micro black holes evaporate via Hawking radiation",
+        "blindspot opened: Residual concern missing \"Institutional statement\""
+      ]
+    },
+    {
+      "version": 7,
+      "action": "add-source",
+      "source": "src_review_of_the_safety_of_lhc_collisions_2008",
+      "title": "Review of the Safety of LHC Collisions",
+      "ts": "2026-06-20T22:20:25.256627+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 5 → 6",
+        "concentration: No risk 80% → 83% (top: Cosmic-ray safety argument)",
+        "most-reused case-wide: Cosmic-ray safety argument 4 → Cosmic-ray safety argument 5/7"
+      ]
+    },
+    {
+      "version": 8,
+      "action": "add-source",
+      "source": "src_high_energy_colliders_as_black_hole_factorie_2002",
+      "title": "High Energy Colliders as Black Hole Factories: The End of Short Distance Physics",
+      "ts": "2026-06-20T22:20:25.257349+00:00",
+      "newDatasets": [
+        "ds_extra_dimensions_tev_scale_gravity_theory"
+      ],
+      "newPositions": [],
+      "diff": [
+        "distribution: Residual concern 1 → 2",
+        "concentration: Residual concern 100% → 50% (top: Accretion-rate modeling)"
+      ]
+    },
+    {
+      "version": 9,
+      "action": "add-source",
+      "source": "src_comments_on_claimed_risk_from_metastable_bla_2008",
+      "title": "Comments on claimed risk from metastable black holes",
+      "ts": "2026-06-20T22:20:25.258083+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 6 → 7",
+        "concentration: No risk 83% → 71% (top: Cosmic-ray safety argument)"
+      ]
+    },
+    {
+      "version": 10,
+      "action": "add-source",
+      "source": "src_exclusion_of_black_hole_disaster_scenarios_a_2008",
+      "title": "Exclusion of black hole disaster scenarios at the LHC",
+      "ts": "2026-06-20T22:20:25.258845+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 7 → 8",
+        "concentration: No risk 71% → 75% (top: Cosmic-ray safety argument)",
+        "most-reused case-wide: Cosmic-ray safety argument 5 → Cosmic-ray safety argument 6/10"
+      ]
+    },
+    {
+      "version": 11,
+      "action": "add-source",
+      "source": "src_possibility_of_catastrophic_black_hole_growt_2009",
+      "title": "Possibility of Catastrophic Black Hole Growth in the Warped Brane-World Scenario at the LHC",
+      "ts": "2026-06-20T22:20:25.259786+00:00",
+      "newDatasets": [
+        "ds_warped_brane_world_black_hole_dynamics_model"
+      ],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 8 → 9",
+        "concentration: No risk 75% → 67% (top: Cosmic-ray safety argument)"
+      ]
+    },
+    {
+      "version": 12,
+      "action": "add-source",
+      "source": "src_the_end_of_the_world_at_the_large_hadron_col_2008",
+      "title": "The end of the world at the Large Hadron Collider?",
+      "ts": "2026-06-20T22:20:25.260652+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 9 → 10",
+        "concentration: No risk 67% → 70% (top: Cosmic-ray safety argument)",
+        "most-reused case-wide: Cosmic-ray safety argument 6 → Cosmic-ray safety argument 7/12"
+      ]
+    },
+    {
+      "version": 13,
+      "action": "add-source",
+      "source": "src_probing_the_improbable_methodological_challe_2008",
+      "title": "Probing the Improbable: Methodological Challenges for Risks with Low Probabilities and High Stakes",
+      "ts": "2026-06-20T22:20:54.610659+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: Residual concern 2 → 3",
+        "concentration: Residual concern 50% → 33% (top: Accretion-rate modeling)",
+        "+ new crux: Precautionary weight on catastrophic tail"
+      ]
+    },
+    {
+      "version": 14,
+      "action": "add-source",
+      "source": "src_sancho_v_u_s_dept_of_energy_578_f_supp_2d_12_2008",
+      "title": "Sancho v. U.S. Dept. of Energy (578 F.Supp.2d 1258 (D. Haw. 2008))",
+      "ts": "2026-06-20T22:20:54.612555+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 10 → 11",
+        "concentration: No risk 70% → 64% (top: Cosmic-ray safety argument)"
+      ]
+    },
+    {
+      "version": 15,
+      "action": "add-source",
+      "source": "src_the_black_hole_case_the_injunction_against_t_2010",
+      "title": "The Black Hole Case: The Injunction Against the End of the World",
+      "ts": "2026-06-20T22:20:54.613642+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: Residual concern 3 → 4",
+        "concentration: Residual concern 33% → 25% (top: Accretion-rate modeling)",
+        "blindspot closed: Residual concern now covers \"Expert review\""
+      ]
+    },
+    {
+      "version": 16,
+      "action": "add-source",
+      "source": "src_lhc_lawsuit_dismissed_by_us_court_2010",
+      "title": "LHC lawsuit dismissed by US court",
+      "ts": "2026-06-20T22:20:54.614803+00:00",
+      "newDatasets": [],
+      "newPositions": [],
+      "diff": [
+        "distribution: No risk 11 → 12",
+        "concentration: No risk 64% → 58% (top: Cosmic-ray safety argument)"
+      ]
     }
   ],
   "meta": {
     "id": "blackhole",
-    "updated": "2026-06-13T02:17:07.774746+00:00",
-    "version": 4,
+    "updated": "2026-06-20T22:20:54.614803+00:00",
+    "version": 16,
     "question": "Could the LHC create a black hole that destroys Earth?",
     "portal": {
       "id": "17a797adc2a4",
-      "baseVersion": 4,
+      "baseVersion": 16,
       "url": "https://portal-production-0176.up.railway.app"
     }
   },
@@ -86,10 +255,10 @@
       "id": "f_micro_black_holes_evaporate_via_hawking_radi",
       "label": "Micro black holes evaporate via Hawking radiation",
       "weights": {
-        "pos_no_risk": "high",
+        "pos_no_risk": "med",
         "pos_residual_concern": "low"
       },
-      "rationale": "",
+      "rationale": "Source mentions micro black holes as a scientific target but does not explicitly discuss Hawking radiation or safety; minimal direct bearing.",
       "provenance": [
         {
           "pos": "pos_no_risk",
@@ -105,6 +274,51 @@
           "pos": "pos_residual_concern",
           "quote": "Hawking radiation is not established",
           "source": "src_plaga_potential_catastrophic_risk_from_metas_2008"
+        },
+        {
+          "source": "src_the_quantum_frontier_the_large_hadron_collid_2009",
+          "pos": "pos_no_risk",
+          "quote": "finding micro black holes and supersymmetric particles"
+        },
+        {
+          "source": "src_study_of_potentially_dangerous_events_during_2003",
+          "pos": "pos_no_risk",
+          "quote": "gravitational black holes ... Stable black holes and monopoles"
+        },
+        {
+          "source": "src_review_of_the_safety_of_lhc_collisions_2008",
+          "pos": "pos_no_risk",
+          "quote": "Any microscopic black holes produced at the LHC are expected to decay by Hawking radiation before they reach the detector walls."
+        },
+        {
+          "source": "src_high_energy_colliders_as_black_hole_factorie_2002",
+          "pos": "pos_residual_concern",
+          "quote": "The non-perturbative process of black hole formation and decay by Hawking evaporation gives rise to spectacular events"
+        },
+        {
+          "source": "src_comments_on_claimed_risk_from_metastable_bla_2008",
+          "pos": "pos_no_risk",
+          "quote": "metastable black hole scenario could pose collider risk not excluded by our previous study"
+        },
+        {
+          "source": "src_exclusion_of_black_hole_disaster_scenarios_a_2008",
+          "pos": "pos_no_risk",
+          "quote": "conjectured production of mini black holes might lead to a dangerous chain reaction"
+        },
+        {
+          "source": "src_possibility_of_catastrophic_black_hole_growt_2009",
+          "pos": "pos_no_risk",
+          "quote": "black hole mass accretion and decay is obtained as a function of time"
+        },
+        {
+          "source": "src_the_end_of_the_world_at_the_large_hadron_col_2008",
+          "pos": "pos_no_risk",
+          "quote": "the idea that the LHC will produce microscopic black holes that will grow to macroscopic size, slowly turning the whole earth into a black hole"
+        },
+        {
+          "source": "src_probing_the_improbable_methodological_challe_2008",
+          "pos": "pos_residual_concern",
+          "quote": "a flaw in the underlying theory, a flaw in the modeling of the problem, or a mistake in the calculations"
         }
       ]
     },
@@ -115,7 +329,7 @@
         "pos_no_risk": "high",
         "pos_residual_concern": "low"
       },
-      "rationale": "",
+      "rationale": "Report explicitly uses cosmic-ray and astrophysical constraints as a primary line of evidence against danger.",
       "provenance": [
         {
           "pos": "pos_no_risk",
@@ -131,6 +345,31 @@
           "pos": "pos_residual_concern",
           "quote": "collider black holes would be slow, unlike cosmic-ray ones",
           "source": "src_plaga_potential_catastrophic_risk_from_metas_2008"
+        },
+        {
+          "source": "src_study_of_potentially_dangerous_events_during_2003",
+          "pos": "pos_no_risk",
+          "quote": "Constraints from cosmic rays and astrophysics"
+        },
+        {
+          "source": "src_review_of_the_safety_of_lhc_collisions_2008",
+          "pos": "pos_no_risk",
+          "quote": "The LHC reproduces in the laboratory, under controlled conditions, collisions at centre-of-mass energies less than those reached in the atmosphere by some of the cosmic rays that have been bombarding the Earth for billions of years."
+        },
+        {
+          "source": "src_exclusion_of_black_hole_disaster_scenarios_a_2008",
+          "pos": "pos_no_risk",
+          "quote": "most straight forward arguments that are necessary to rule out such doomsday scenarios"
+        },
+        {
+          "source": "src_the_end_of_the_world_at_the_large_hadron_col_2008",
+          "pos": "pos_no_risk",
+          "quote": "constraints from cosmic rays on the dangerous particles that stop in the earth or the sun, giving the number of proton-nucleon collisions at energies above the given center-of-mass energy already experienced by a single star or planet in one billion years"
+        },
+        {
+          "source": "src_probing_the_improbable_methodological_challe_2008",
+          "pos": "pos_residual_concern",
+          "quote": "there are important new methodological problems which arise when assessing global catastrophic risks and we focus on a problem regarding probability estimation"
         }
       ]
     },
@@ -141,7 +380,7 @@
         "pos_no_risk": "low",
         "pos_residual_concern": "high"
       },
-      "rationale": "",
+      "rationale": "Report acknowledges public concern but concludes no basis for threat, giving little weight to residual precautionary concern.",
       "provenance": [
         {
           "pos": "pos_no_risk",
@@ -152,6 +391,61 @@
           "pos": "pos_residual_concern",
           "quote": "",
           "source": "src_plaga_potential_catastrophic_risk_from_metas_2008"
+        },
+        {
+          "source": "src_study_of_potentially_dangerous_events_during_2003",
+          "pos": "pos_no_risk",
+          "quote": "it is legitimate to wonder whether any of these new phenomena may be potentially dangerous"
+        },
+        {
+          "source": "src_review_of_the_safety_of_lhc_collisions_2008",
+          "pos": "pos_no_risk",
+          "quote": "If some microscopic black holes were stable, those produced by cosmic rays would be stopped inside the Earth or other astronomical bodies."
+        },
+        {
+          "source": "src_high_energy_colliders_as_black_hole_factorie_2002",
+          "pos": "pos_residual_concern",
+          "quote": "future hadron colliders such as the Large Hadron Collider will be black hole factories"
+        },
+        {
+          "source": "src_comments_on_claimed_risk_from_metastable_bla_2008",
+          "pos": "pos_no_risk",
+          "quote": "We comment on inconsistency of this proposed scenario."
+        },
+        {
+          "source": "src_exclusion_of_black_hole_disaster_scenarios_a_2008",
+          "pos": "pos_no_risk",
+          "quote": "there is also some fear in the public, that the conjectured production of mini black holes might lead to a dangerous chain reaction"
+        },
+        {
+          "source": "src_possibility_of_catastrophic_black_hole_growt_2009",
+          "pos": "pos_no_risk",
+          "quote": "we argue against the possibility of catastrophic black hole growth at the LHC"
+        },
+        {
+          "source": "src_the_end_of_the_world_at_the_large_hadron_col_2008",
+          "pos": "pos_no_risk",
+          "quote": "none of them are moving to Melbourne"
+        },
+        {
+          "source": "src_probing_the_improbable_methodological_challe_2008",
+          "pos": "pos_residual_concern",
+          "quote": "If the probability estimate given by an argument is dwarfed by the chance that the argument itself is flawed, then the estimate is suspect"
+        },
+        {
+          "source": "src_sancho_v_u_s_dept_of_energy_578_f_supp_2d_12_2008",
+          "pos": "pos_no_risk",
+          "quote": "Plaintiffs allege that operation of the LHC could potentially trigger various irreversible processes that could lead to the destruction of the Earth"
+        },
+        {
+          "source": "src_the_black_hole_case_the_injunction_against_t_2010",
+          "pos": "pos_residual_concern",
+          "quote": "What should a court do with a preliminary-injunction request to halt a multi-billion-dollar particle-physics experiment that plaintiffs claim could create a black hole that will devour the planet?"
+        },
+        {
+          "source": "src_lhc_lawsuit_dismissed_by_us_court_2010",
+          "pos": "pos_no_risk",
+          "quote": "Speculative fear of future harm does not constitute an injury in fact sufficient to confer standing."
         }
       ]
     }
@@ -238,6 +532,307 @@
           "extractionConfidence": 0.7
         }
       }
+    },
+    {
+      "id": "src_the_quantum_frontier_the_large_hadron_collid_2009",
+      "title": "The quantum frontier: the large hadron collider",
+      "year": 2009,
+      "url": "https://doi.org/10.5860/choice.47-0928",
+      "position": "pos_no_risk",
+      "evidence": "Expert review",
+      "funding": "Undisclosed",
+      "population": "—",
+      "confidence": "unstated",
+      "restsOn": [],
+      "provenance": {
+        "position": {
+          "quote": "widespread fears that its energy would create tiny black holes that could destroy the earth",
+          "extractionConfidence": 0.4
+        },
+        "restsOn": {
+          "quote": "",
+          "extractionConfidence": 0.2
+        }
+      },
+      "addedIn": 5
+    },
+    {
+      "id": "src_study_of_potentially_dangerous_events_during_2003",
+      "title": "Study of Potentially Dangerous Events During Heavy-Ion Collisions at the LHC (CERN-2003-001)",
+      "year": 2003,
+      "url": "https://cds.cern.ch/record/613175/files/CERN-2003-001.pdf",
+      "position": "pos_no_risk",
+      "evidence": "Institutional statement",
+      "funding": "Government/public",
+      "population": "—",
+      "confidence": "high",
+      "restsOn": [
+        "ds_cosmic_ray_safety_argument",
+        "ds_white_dwarf_neutron_star_survival",
+        "ds_hawking_radiation_theory"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "We find no basis for any conceivable threat.",
+          "extractionConfidence": 0.98
+        },
+        "restsOn": {
+          "quote": "Constraints from cosmic rays and astrophysics ... Stable black holes and monopoles",
+          "extractionConfidence": 0.85
+        }
+      },
+      "addedIn": 6
+    },
+    {
+      "id": "src_review_of_the_safety_of_lhc_collisions_2008",
+      "title": "Review of the Safety of LHC Collisions",
+      "year": 2008,
+      "url": "https://arxiv.org/abs/0806.3414",
+      "position": "pos_no_risk",
+      "evidence": "Expert review",
+      "funding": "Government/public",
+      "population": "—",
+      "confidence": "high",
+      "restsOn": [
+        "ds_cosmic_ray_safety_argument",
+        "ds_hawking_radiation_theory",
+        "ds_white_dwarf_neutron_star_survival",
+        "ds_accretion_rate_modeling"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "we study the possible production at the LHC of hypothetical objects such as vacuum bubbles, magnetic monopoles, microscopic black holes and strangelets, and find no associated risks.",
+          "extractionConfidence": 0.99
+        },
+        "restsOn": {
+          "quote": "The stability of astronomical bodies indicates that such collisions cannot be dangerous... the stability of astronomical bodies constrains strongly the possible rate of accretion by any such microscopic black holes",
+          "extractionConfidence": 0.95
+        }
+      },
+      "addedIn": 7
+    },
+    {
+      "id": "src_high_energy_colliders_as_black_hole_factorie_2002",
+      "title": "High Energy Colliders as Black Hole Factories: The End of Short Distance Physics",
+      "year": 2002,
+      "url": "https://arxiv.org/abs/hep-ph/0106219",
+      "position": "pos_residual_concern",
+      "evidence": "Theoretical analysis",
+      "funding": "Undisclosed",
+      "population": "—",
+      "confidence": "moderate",
+      "restsOn": [
+        "ds_extra_dimensions_tev_scale_gravity_theory"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "future hadron colliders such as the Large Hadron Collider will be black hole factories. The non-perturbative process of black hole formation and decay by Hawking evaporation gives rise to spectacular events",
+          "extractionConfidence": 0.82
+        },
+        "restsOn": {
+          "quote": "If the fundamental Planck scale is of order a TeV, as the case in some extra-dimensions scenarios",
+          "extractionConfidence": 0.85
+        }
+      },
+      "addedIn": 8
+    },
+    {
+      "id": "src_comments_on_claimed_risk_from_metastable_bla_2008",
+      "title": "Comments on claimed risk from metastable black holes",
+      "year": 2008,
+      "url": "https://arxiv.org/abs/0808.4087",
+      "position": "pos_no_risk",
+      "evidence": "Theoretical critique",
+      "funding": "Undisclosed",
+      "population": "—",
+      "confidence": "high",
+      "restsOn": [
+        "ds_accretion_rate_modeling",
+        "ds_white_dwarf_neutron_star_survival"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "it was argued that a hypothetical metastable black hole scenario could pose collider risk not excluded by our previous study. We comment on inconsistency of this proposed scenario.",
+          "extractionConfidence": 0.93
+        },
+        "restsOn": {
+          "quote": "inconsistency of this proposed scenario",
+          "extractionConfidence": 0.6
+        }
+      },
+      "addedIn": 9
+    },
+    {
+      "id": "src_exclusion_of_black_hole_disaster_scenarios_a_2008",
+      "title": "Exclusion of black hole disaster scenarios at the LHC",
+      "year": 2008,
+      "url": "https://arxiv.org/abs/0807.3349",
+      "position": "pos_no_risk",
+      "evidence": "Theoretical analysis",
+      "funding": "Undisclosed",
+      "population": "—",
+      "confidence": "high",
+      "restsOn": [
+        "ds_cosmic_ray_safety_argument",
+        "ds_hawking_radiation_theory",
+        "ds_accretion_rate_modeling"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "we summarize the most straight forward arguments that are necessary to rule out such doomsday scenarios.",
+          "extractionConfidence": 0.97
+        },
+        "restsOn": {
+          "quote": "most straight forward arguments that are necessary to rule out such doomsday scenarios",
+          "extractionConfidence": 0.7
+        }
+      },
+      "addedIn": 10
+    },
+    {
+      "id": "src_possibility_of_catastrophic_black_hole_growt_2009",
+      "title": "Possibility of Catastrophic Black Hole Growth in the Warped Brane-World Scenario at the LHC",
+      "year": 2009,
+      "url": "https://arxiv.org/abs/0901.2948",
+      "position": "pos_no_risk",
+      "evidence": "Theoretical analysis",
+      "funding": "Undisclosed",
+      "population": "—",
+      "confidence": "moderate",
+      "restsOn": [
+        "ds_accretion_rate_modeling",
+        "ds_warped_brane_world_black_hole_dynamics_model"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "we argue against the possibility of catastrophic black hole growth at the LHC.",
+          "extractionConfidence": 0.98
+        },
+        "restsOn": {
+          "quote": "The black hole mass accretion and decay is obtained as a function of time, and the maximum black hole mass is obtained as a function of a critical mass parameter.",
+          "extractionConfidence": 0.88
+        }
+      },
+      "addedIn": 11
+    },
+    {
+      "id": "src_the_end_of_the_world_at_the_large_hadron_col_2008",
+      "title": "The end of the world at the Large Hadron Collider?",
+      "year": 2008,
+      "url": "https://physics.aps.org/articles/v1/14",
+      "position": "pos_no_risk",
+      "evidence": "Expert review",
+      "funding": "Government/public",
+      "population": "—",
+      "confidence": "high",
+      "restsOn": [
+        "ds_cosmic_ray_safety_argument",
+        "ds_white_dwarf_neutron_star_survival",
+        "ds_accretion_rate_modeling"
+      ],
+      "provenance": {
+        "position": {
+          "quote": "there is no actual theory that leads to this conclusion... It is only after one makes a series of hypotheses about how our theories might be incorrect that a problem might appear.",
+          "extractionConfidence": 0.95
+        },
+        "restsOn": {
+          "quote": "New arguments based on astrophysical phenomena constrain the possibility that dangerous black holes will be produced at the CERN Large Hadron Collider.",
+          "extractionConfidence": 0.9
+        }
+      },
+      "addedIn": 12
+    },
+    {
+      "id": "src_probing_the_improbable_methodological_challe_2008",
+      "title": "Probing the Improbable: Methodological Challenges for Risks with Low Probabilities and High Stakes",
+      "year": 2008,
+      "url": "https://arxiv.org/abs/0810.5515",
+      "position": "pos_residual_concern",
+      "evidence": "Theoretical analysis",
+      "funding": "Academic/institutional",
+      "population": "—",
+      "confidence": "moderate",
+      "restsOn": [],
+      "provenance": {
+        "position": {
+          "quote": "If the probability estimate given by an argument is dwarfed by the chance that the argument itself is flawed, then the estimate is suspect. We develop this idea formally, explaining how it differs from the related distinctions of model and parameter uncertainty. Using the risk estimates from the Large Hadron Collider as a test case, we show how serious the problem can be when it comes to catastrophic risks",
+          "extractionConfidence": 0.88
+        },
+        "restsOn": {
+          "quote": "Using the risk estimates from the Large Hadron Collider as a test case",
+          "extractionConfidence": 0.5
+        }
+      },
+      "addedIn": 13
+    },
+    {
+      "id": "src_sancho_v_u_s_dept_of_energy_578_f_supp_2d_12_2008",
+      "title": "Sancho v. U.S. Dept. of Energy (578 F.Supp.2d 1258 (D. Haw. 2008))",
+      "year": 2008,
+      "url": "https://case-law.vlex.com/vid/sancho-v-u-s-887531654",
+      "position": "pos_no_risk",
+      "evidence": "Institutional statement",
+      "funding": "Government/public",
+      "population": "—",
+      "confidence": "unstated",
+      "restsOn": [],
+      "provenance": {
+        "position": {
+          "quote": "Defendants' Motion to Dismiss is GRANTED",
+          "extractionConfidence": 0.72
+        },
+        "restsOn": {
+          "quote": "Defendants also filed four declarations by Denis Kovar, Joanna Livengood, Morris Pripstein, and Bruce Strauss, in support of the Motion.",
+          "extractionConfidence": 0.45
+        }
+      },
+      "addedIn": 14
+    },
+    {
+      "id": "src_the_black_hole_case_the_injunction_against_t_2010",
+      "title": "The Black Hole Case: The Injunction Against the End of the World",
+      "year": 2010,
+      "url": "https://arxiv.org/abs/0912.5480",
+      "position": "pos_residual_concern",
+      "evidence": "Expert review",
+      "funding": "Academic/institutional",
+      "population": "—",
+      "confidence": "low",
+      "restsOn": [],
+      "provenance": {
+        "position": {
+          "quote": "the article explores the daunting challenges the case presents to equity, evidence, and law-and-economics analysis... a method for providing meaningful judicial review even in cases, such as this one, where the scientific issues are almost unfathomably complex",
+          "extractionConfidence": 0.75
+        },
+        "restsOn": {
+          "quote": "the relevant facts of the scientific debate and its human context are memorialized and made ripe for legal analysis",
+          "extractionConfidence": 0.4
+        }
+      },
+      "addedIn": 15
+    },
+    {
+      "id": "src_lhc_lawsuit_dismissed_by_us_court_2010",
+      "title": "LHC lawsuit dismissed by US court",
+      "year": 2010,
+      "url": "https://www.symmetrymagazine.org/breaking/2010/08/26/lhc-lawsuit-dismissed-by-us-court",
+      "position": "pos_no_risk",
+      "evidence": "Institutional statement",
+      "funding": "Government/public",
+      "population": "—",
+      "confidence": "unstated",
+      "restsOn": [],
+      "provenance": {
+        "position": {
+          "quote": "Wagner failed to show a 'credible threat of harm'... Speculative fear of future harm does not constitute an injury in fact sufficient to confer standing.",
+          "extractionConfidence": 0.85
+        },
+        "restsOn": {
+          "quote": "Wagner has alleged that experiments at the Large Hadron Collider have 'potential adverse consequences.'",
+          "extractionConfidence": 0.4
+        }
+      },
+      "addedIn": 16
     }
   ],
   "datasets": [
@@ -260,6 +855,16 @@
       "id": "ds_accretion_rate_modeling",
       "label": "Accretion-rate modeling",
       "aliases": []
+    },
+    {
+      "id": "ds_extra_dimensions_tev_scale_gravity_theory",
+      "label": "Extra-dimensions TeV-scale gravity theory",
+      "aliases": []
+    },
+    {
+      "id": "ds_warped_brane_world_black_hole_dynamics_model",
+      "label": "Warped brane-world black hole dynamics model",
+      "aliases": []
     }
   ],
   "positions": [
@@ -273,5 +878,25 @@
       "hue": "#B4502E",
       "label": "Residual concern"
     }
-  ]
+  ],
+  "vocab": {
+    "evidence": [
+      {
+        "label": "Expert review",
+        "aliases": []
+      },
+      {
+        "label": "Institutional statement",
+        "aliases": []
+      },
+      {
+        "label": "Theoretical analysis",
+        "aliases": []
+      },
+      {
+        "label": "Theoretical critique",
+        "aliases": []
+      }
+    ]
+  }
 }

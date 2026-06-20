@@ -146,11 +146,14 @@ def contribute_html(qid, get_question):
     """.format(id=_esc(qid), question=_esc(q["question"]))
     body = head + """
     <div class="panel">
-      <div class="step">Step 1 · Find</div><h2>Find candidate papers</h2>
+      <div class="step">Step 1 · Find or paste a URL</div><h2>Find candidate papers</h2>
       <p class="desc">Free scholarly search (OpenAlex) across the positions — no key.</p>
       <div class="bar"><input id="k" type="number" value="10" style="flex:0 0 90px">
         <button class="btn" onclick="find()">Find sources</button></div>
       <div id="finds"></div>
+      <p class="desc" style="margin:16px 0 6px">— or add <b>one source by URL</b>, no search —</p>
+      <div class="bar"><input id="oneUrl" placeholder="https://doi.org/… , a PubMed/arXiv link, or any article URL" style="flex:1">
+        <button class="btn ghost" onclick="fetchUrl()">Fetch this URL ↓</button></div>
     </div>
     <div class="panel">
       <div class="step">Step 2 · Fetch &amp; get one file</div><h2>Fetch text &amp; get one labelling file</h2>
@@ -190,8 +193,10 @@ def contribute_html(qid, get_question):
     function selected(){return [...document.querySelectorAll('.ck:checked')].map(c=>CANDS[+c.dataset.i].url);}
     function upd(){document.getElementById('fetchBtn').disabled = selected().length===0;}
     let BUNDLE='';
-    async function fetchSel(){
-      const urls=selected(); if(!urls.length)return;
+    function fetchSel(){doFetch(selected());}
+    function fetchUrl(){const u=document.getElementById('oneUrl').value.trim(); if(!u){return;} doFetch([u]);}
+    async function doFetch(urls){
+      if(!urls.length)return;
       const b=document.getElementById('prompts'); b.innerHTML='Fetching real text…';
       const r=await fetch(`/api/questions/${QID}/fetch`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls})});
       const j=await r.json();
