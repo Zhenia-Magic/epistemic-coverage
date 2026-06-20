@@ -119,12 +119,16 @@ def viewer_html(qid, get_question):
     with open(os.path.join(ROOT, "viewer", "template.html"), encoding="utf-8") as f:
         tpl = f.read()
     html = tpl.replace("/*__DATA__*/null", json.dumps(bundle, ensure_ascii=False))
-    # inject a thin top bar linking back home and to the contribute flow
-    bar = ("<div style=\"max-width:980px;margin:0 auto;padding:14px 24px 0;"
-           "font-family:ui-monospace,monospace;font-size:12px\">"
-           "<a href='/' style='color:#61676E'>← all questions</a>"
-           " &nbsp;·&nbsp; <a href='/q/{}/add' style='color:#2f6296'>+ add sources</a></div>"
-           ).format(_esc(qid))
+    # inject a thin top bar linking back home and to the contribute flow.
+    # Use a <style> (not inline colors) so :hover works — inline styles can't carry :hover.
+    # Built by concatenation (NOT .format) because the CSS braces would clash with placeholders.
+    bar = ("<style>.pbar{max-width:980px;margin:0 auto;padding:14px 24px 0;"
+           "font-family:ui-monospace,monospace;font-size:12px;}"
+           ".pbar a{color:#2f6296;text-decoration:none;cursor:pointer;}"
+           ".pbar a:hover{text-decoration:underline;}"
+           ".pbar .sep{color:#8A9098;margin:0 8px;}</style>"
+           "<div class='pbar'><a href='/'>← all questions</a>"
+           "<span class='sep'>·</span><a href='/q/" + _esc(qid) + "/add'>+ add sources</a></div>")
     return html.replace("<body>", "<body>" + bar, 1)
 
 
