@@ -1,3 +1,5 @@
-pypdf>=4.0      # PDF ingestion (lazy import; only needed for .pdf sources)
-python-docx>=1.0 # .docx ingestion (lazy import; only needed for .docx sources)
-# Core engine, viewer build, URL/txt/html ingestion, and --dry-run need NO third-party packages.
+pypdf>=4.0          # full-text PDF labelling (lazy import; falls back to abstracts without it)
+python-docx>=1.0    # .docx ingestion (lazy import; only needed for .docx sources)
+psycopg[binary]>=3.1  # Postgres driver for the deployed portal (local dev uses stdlib sqlite)
+# Core engine, viewer build, URL/txt/html ingestion, --dry-run, and the local sqlite store
+# need NO third-party packages — the above are only for full-text PDF, docx, and Postgres.

@@ -18,6 +18,7 @@ Run locally:  python -m app.portal --port 8800     (sqlite store, no key, no dep
 Production:   gunicorn-style not needed; ThreadingHTTPServer behind Railway is fine for this load.
 """
 import json
+import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from app import store, web
@@ -193,10 +194,25 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
 
+def _seed_if_empty():
+    """On a fresh deploy the store is empty — load the bundled demo cases so the portal isn't
+    blank. Idempotent: does nothing once questions exist."""
+    try:
+        if store.list_questions(limit=1):
+            return
+        from app.seed import seed_from_cases
+        added = seed_from_cases()
+        if added:
+            print("Seeded {} demo question(s).".format(len(added)))
+    except Exception as e:
+        print("seed skipped:", e)
+
+
 def run(port=8800):
     from app.env import load_dotenv
     load_dotenv()
     store.init_db()
+    _seed_if_empty()
     httpd = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print("Portal on http://0.0.0.0:{}  (store: {})".format(
         port, "Postgres" if store._IS_PG else store._SQLITE_PATH))
@@ -206,5 +222,5 @@ def run(port=8800):
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=8800)
+    ap.add_argument("--port", type=int, default=int(os.environ.get("PORT", 8800)))
     run(ap.parse_args().port)
