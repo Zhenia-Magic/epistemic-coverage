@@ -70,8 +70,8 @@ def _page(title, body):
 
 def home_html():
     body = """
-    <div class="kicker">Epistemic Coverage</div>
-    <h1>Research disputes, mapped like the news</h1>
+    <div class="kicker">Ground Knowledge</div>
+    <h1>Research disputes, mapped by the evidence</h1>
     <p class="sub">Browse questions, see how the evidence splits, and whether an apparent
     consensus is real — or the same few sources counted many times. Add a question or contribute
     sources to one.</p>
@@ -107,7 +107,7 @@ def home_html():
     let t;document.getElementById('q').addEventListener('input',()=>{clearTimeout(t);t=setTimeout(load,200);});
     load();
     </script>"""
-    return _page("Epistemic Coverage", body)
+    return _page("Ground Knowledge", body)
 
 
 def viewer_html(qid, get_question):
