@@ -39,6 +39,13 @@
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0;}
   .panel h3{margin:0 0 4px;font-size:14px;font-weight:600;}
   .panel .hint{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin:0 0 14px;}
+  .subnote{color:var(--muted);font-size:13px;margin:0 0 16px;line-height:1.5;}
+  .splitlabel{font-size:13px;font-weight:600;color:var(--ink);margin:18px 0 7px;display:flex;
+    align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .splitlabel .num{font-family:var(--mono);color:var(--faint);font-weight:400;}
+  .splitlabel .q{font-weight:400;color:var(--faint);font-size:12px;}
+  .takeaway{margin:14px 0 2px;font-size:14px;line-height:1.55;color:var(--ink);
+    background:var(--flag-bg);border-left:3px solid var(--flag);border-radius:0 8px 8px 0;padding:12px 15px;}
   .distrib{display:flex;height:40px;border-radius:8px;overflow:hidden;border:1px solid var(--line);}
   .distrib .seg-bar{display:block;line-height:40px;text-align:center;font-size:12px;font-family:var(--mono);
     cursor:pointer;border:0;color:#fff;min-width:0;padding:0 8px;transition:opacity .15s;
@@ -193,6 +200,17 @@ function renderCoverage(c){
     return `<button class="seg-bar ${dim}" data-pos="${d.id}" style="flex:${d.weight||0.0001};background:${d.hue}"
       title="${esc(d.label)} — ${d.raw} sources ≈ ${(d.weight||0).toFixed(1)} independent looks">${d.pct>=10?esc(barLabel)+" · "+d.pct+"%":d.pct+"%"}</button>`;
   }).join("");
+  // Plain-language takeaway: which position shrinks most when weighted by independence?
+  let takeaway="";
+  if(wbar){
+    const rawById={}; a.distribution.forEach(d=>rawById[d.id]=d);
+    let big=null;
+    wd.forEach(w=>{const r=rawById[w.id]; if(!r)return; const drop=r.pct-w.pct;
+      if(big===null||drop>big.drop) big={label:w.label,rawPct:r.pct,wPct:w.pct,drop:drop};});
+    takeaway = (big && big.drop>=5)
+      ? `<div class="takeaway">Weighted by independence, <b>${esc(big.label)}</b> drops from <b>${big.rawPct}%</b> of sources to <b>${big.wPct}%</b> of the independent evidence — its support rests on fewer distinct datasets than the headcount implies.</div>`
+      : `<div class="takeaway">The two views largely agree here — each position's evidence is about as independent as it is numerous.</div>`;
+  }
   const legend=a.distribution.map(d=>
     `<span class="key" data-pos="${d.id}"><span class="dot" style="background:${d.hue}"></span>${esc(d.label)} <span style="font-family:var(--mono);color:var(--faint)">(${d.count})</span></span>`).join("");
   let skewHtml="";
@@ -228,10 +246,13 @@ function renderCoverage(c){
   }).join("");
   return `
     <div class="panel"><h3>How the evidence base splits</h3>
-      <p class="hint">by source count — the naive aggregator's view · click to filter</p>
+      <p class="subnote">Two views of the same evidence: by <b>how many sources</b> take each side, then by <b>how much independent evidence</b> each side actually rests on.</p>
+      <div class="splitlabel"><span class="num">1</span> By source count <span class="q">— the naïve tally · click a segment to filter</span></div>
       <div class="distrib">${bar}</div>
-      ${wbar?`<p class="hint" style="margin-top:16px">weighted by <b>independent evidence</b> (effective datasets, nEff) — correlated sources collapse, so a position propped up by re-used data shrinks. <i>This is the view that matters.</i></p>
-      <div class="distrib">${wbar}</div>`:""}
+      ${wbar?`
+      <div class="splitlabel"><span class="num">2</span> Weighted by independent evidence <span class="q">— sources sharing a dataset collapse into one “look”</span></div>
+      <div class="distrib">${wbar}</div>
+      ${takeaway}`:""}
       <div class="legend">${legend}</div>${skewHtml}</div>
     <div class="panel"><h3>Sources${active?` — ${esc(pos[active].label)}`:""}</h3>
       <p class="hint">each source tagged with evidence type, funding, population, and the datasets it rests on (↳)</p>
