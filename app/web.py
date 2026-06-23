@@ -197,7 +197,7 @@ def docs_html(repo="https://github.com/Zhenia-Magic/epistemic-coverage"):
     label automatically, and they can do things the website can't:</p>
     <ul>
       <li><b>Cold-start</b> a brand-new question from scratch (discover + label dozens of sources).</li>
-      <li><b>Automatic labelling</b> of fetched text using your Anthropic or OpenAI key.</li>
+      <li><b>Automatic labelling</b> of fetched text using your own key — Anthropic, OpenAI, DeepSeek, Mistral, Groq, Gemini, or OpenRouter.</li>
       <li><b>Import a whole library</b> from Zotero / Mendeley / EndNote (.ris, .bib, .csl-json).</li>
       <li><b>Curate</b>: merge duplicate datasets, rename, tidy messy labels.</li>
       <li><b>Push / pull</b> a knowledge base between your machine and this portal.</li>
@@ -223,7 +223,8 @@ pip install -r requirements.txt</pre>
     <pre><span class="c"># copy the template, then edit .env</span>
 cp .env.example .env</pre>
     <table class="cmdtbl">
-      <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Your AI key for automatic labelling (or <code>OPENAI_API_KEY</code>). Web search / deep research need Anthropic.</td></tr>
+      <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Your AI key for automatic labelling. Web search / deep research need Anthropic.</td></tr>
+      <tr><td>… or any one of</td><td><code>OPENAI_API_KEY</code>, <code>DEEPSEEK_API_KEY</code>, <code>MISTRAL_API_KEY</code>, <code>GROQ_API_KEY</code>, <code>GEMINI_API_KEY</code>, <code>OPENROUTER_API_KEY</code> — all label fetched text fine. The local app also lets you paste a key and pick the provider.</td></tr>
       <tr><td><code>EPISTEMIC_PORTAL</code></td><td>This portal's URL for push/pull — e.g. <code>https://groundknowledge.org</code>.</td></tr>
       <tr><td><code>EPISTEMIC_CONTACT_EMAIL</code></td><td>Your email → OpenAlex/Crossref "polite pool" (faster, higher limits).</td></tr>
       <tr><td><code>EPISTEMIC_ADMIN_TOKEN</code></td><td>Only if you run a portal and want to push whole-KB replacements.</td></tr>

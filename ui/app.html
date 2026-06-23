@@ -81,10 +81,23 @@
     but auto-labelling needs a key. Paste one here for this session, or add it to a <b>.env</b>
     file (copy <code>.env.example</code>) so it loads every time. The key stays on this machine.</p>
     <div class="row">
-      <div><label for="keyIn">API key (Anthropic or OpenAI)</label>
-        <input id="keyIn" type="password" placeholder="sk-ant-… or sk-…" autocomplete="off"></div>
+      <div class="narrow"><label for="keyProvider">Provider</label>
+        <select id="keyProvider">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI (GPT)</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="mistral">Mistral</option>
+          <option value="groq">Groq</option>
+          <option value="gemini">Google Gemini</option>
+          <option value="openrouter">OpenRouter</option>
+        </select></div>
+      <div><label for="keyIn">API key</label>
+        <input id="keyIn" type="password" placeholder="paste your key…" autocomplete="off"></div>
       <button id="keyBtn">Use key</button>
     </div>
+    <p class="desc" style="margin:8px 0 0">Web search / deep research need Anthropic; the others
+    label fetched text fine. Tip: <code>EPISTEMIC_MODEL</code> in <code>.env</code> overrides the
+    default model for your provider.</p>
     <div class="toast" id="keyToast"></div>
   </div>
   <pre id="log"></pre>
@@ -295,7 +308,8 @@ $("#caseSel").addEventListener("change",showInfo);
 $("#keyBtn").addEventListener("click",()=>busy($("#keyBtn"),async()=>{
   const key=$("#keyIn").value.trim();
   if(!key){toast($("#keyToast"),"Paste a key first.","warn");return;}
-  const r=await api("/api/key",{key});
+  const provider=$("#keyProvider").value;
+  const r=await api("/api/key",{key,provider});
   if(r.error){toast($("#keyToast"),r.error,"warn");return;}
   $("#keyIn").value="";
   MODE=null;                       // re-default to auto now that a key exists

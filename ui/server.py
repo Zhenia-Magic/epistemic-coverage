@@ -36,20 +36,36 @@ from ingest.pipeline import (build_research_prompt, build_discover_prompt, build
 
 
 def has_key():
-    return bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY"))
+    return llm.has_key()
 
 
-def set_key_op(key):
+# provider id (from the UI dropdown) -> env var the LLM layer reads
+_PROVIDER_ENV = {
+    "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY",
+    "deepseek": "DEEPSEEK_API_KEY", "mistral": "MISTRAL_API_KEY",
+    "groq": "GROQ_API_KEY", "gemini": "GEMINI_API_KEY", "openrouter": "OPENROUTER_API_KEY",
+}
+
+
+def set_key_op(key, provider=None):
     """Accept an API key pasted in the local UI (this machine, this session) when none is in the
-    env. Detects provider by prefix; sets it in-process so the LLM layer picks it up. Not written
-    to disk — put it in .env for persistence."""
+    env. The provider comes from the dropdown; if omitted we guess (sk-ant… = Anthropic, else
+    OpenAI). Sets it in-process so the LLM layer picks it up. Not written to disk — put it in .env
+    for persistence."""
     key = (key or "").strip()
     if not key:
         raise ValueError("Paste an API key.")
-    if key.startswith("sk-ant"):
-        os.environ["ANTHROPIC_API_KEY"] = key
+    if provider:
+        env = _PROVIDER_ENV.get(provider.lower())
+        if not env:
+            raise ValueError("Unknown provider: " + provider)
     else:
-        os.environ["OPENAI_API_KEY"] = key
+        env = "ANTHROPIC_API_KEY" if key.startswith("sk-ant") else "OPENAI_API_KEY"
+    # clear the other keys we manage so the chosen provider actually wins the dispatch order
+    for e in set(_PROVIDER_ENV.values()):
+        if e != env:
+            os.environ.pop(e, None)
+    os.environ[env] = key
     return {"hasKey": has_key(), "model": llm.active_model()}
 
 
@@ -277,8 +293,9 @@ def run_all_op(cid, k, source="api", deep=False):
     manual mode can't run unattended because each step is a copy/paste. Re-runnable: if it
     fails partway, finished sources are saved and skipped on the next run."""
     if not has_key():
-        raise ValueError("'Do it all' needs an API key (ANTHROPIC_API_KEY or OPENAI_API_KEY). "
-                         "Without one, use Find → Fetch & label to run the steps by hand.")
+        raise ValueError("'Do it all' needs an API key (Anthropic, OpenAI, DeepSeek, Mistral, "
+                         "Groq, Gemini, or OpenRouter). Without one, use Find → Fetch & label to "
+                         "run the steps by hand.")
     log("=== Do it all · model: {} ===".format(llm.active_model()))
     cands = discover_op(cid, k, apply=True, source=source, deep=deep).get("candidates", [])
     urls = [c.get("url") for c in cands if c.get("url")]
@@ -422,13 +439,14 @@ def portal_push_op(url, cid):
     """Push a local case to the portal — create if it has no lineage, else version-checked update."""
     from app import client
     base = _portal_base(url)
+    token = client.admin_token()
     kb = _read(_case_path(cid))
     pm = (kb.get("meta") or {}).get("portal") or {}
     qid, expected = pm.get("id"), pm.get("baseVersion", 0)
     if not qid:
         created = client.create_question(base, kb["meta"]["question"])
         qid, expected = created["id"], 0
-    res = client.put_kb(base, qid, kb, expected)
+    res = client.put_kb(base, qid, kb, expected, token=token)
     kb["meta"]["portal"] = {"id": qid, "baseVersion": res["version"], "url": base}
     _write(_case_path(cid), kb)
     return {"id": qid, "version": res["version"], "question": kb["meta"]["question"]}
@@ -515,7 +533,7 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/api/tidy":
                 return self._send(200, tidy_op(body.get("id")))
             if self.path == "/api/key":
-                return self._send(200, set_key_op(body.get("key")))
+                return self._send(200, set_key_op(body.get("key"), body.get("provider")))
             if self.path == "/api/portal/list":
                 return self._send(200, portal_list_op(body.get("url")))
             if self.path == "/api/portal/pull":

@@ -1,11 +1,13 @@
 """Model-agnostic LLM access via the stdlib (no SDK dependency).
 
-Dispatches by environment: ANTHROPIC_API_KEY -> Claude, else OPENAI_API_KEY -> OpenAI.
+Dispatches by environment: ANTHROPIC_API_KEY -> Claude; otherwise the first OpenAI-compatible
+provider whose key is set (OpenAI, DeepSeek, Mistral, Groq, Google Gemini, OpenRouter — all speak
+the OpenAI chat-completions protocol, so one code path serves them all).
 With no key set, callers should use --dry-run (print the prompt, paste into any tool).
 `discover()` requests web-grounded search where the backend supports it (Anthropic's
 server-side web_search tool) — that is the "deep research finds its own sources" path.
 
-Override the model with EPISTEMIC_MODEL. Defaults to the latest Claude / a current GPT.
+Override the model with EPISTEMIC_MODEL. Defaults to a sensible model per provider.
 """
 import json
 import os
@@ -18,7 +20,30 @@ RETRY_CODES = {429, 500, 502, 503, 529}  # transient — Anthropic 529 = Overloa
 # Sonnet by default: faster/cheaper and far less prone to 529 "Overloaded" than Opus.
 # Override per-run with EPISTEMIC_MODEL=claude-opus-4-8 (or any model id).
 _DEFAULT_ANTHROPIC = "claude-sonnet-4-6"
-_DEFAULT_OPENAI = "gpt-4o"
+
+# OpenAI-compatible providers, checked in this order after Anthropic. Each speaks the standard
+# /chat/completions protocol, so adding one is just a row here.
+# (env var, base URL, default model, human label)
+_OPENAI_COMPAT = [
+    ("OPENAI_API_KEY",     "https://api.openai.com/v1",                               "gpt-4o",                  "OpenAI"),
+    ("DEEPSEEK_API_KEY",   "https://api.deepseek.com/v1",                             "deepseek-chat",           "DeepSeek"),
+    ("MISTRAL_API_KEY",    "https://api.mistral.ai/v1",                               "mistral-large-latest",    "Mistral"),
+    ("GROQ_API_KEY",       "https://api.groq.com/openai/v1",                          "llama-3.3-70b-versatile", "Groq"),
+    ("GEMINI_API_KEY",     "https://generativelanguage.googleapis.com/v1beta/openai", "gemini-2.0-flash",        "Google Gemini"),
+    ("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1",                            "deepseek/deepseek-chat",  "OpenRouter"),
+]
+
+
+def _active_compat():
+    """The first OpenAI-compatible provider whose key is set, or None."""
+    for row in _OPENAI_COMPAT:
+        if os.environ.get(row[0]):
+            return row
+    return None
+
+
+def has_key():
+    return bool(os.environ.get("ANTHROPIC_API_KEY")) or _active_compat() is not None
 
 # optional hook the server sets so retry/backoff notices show up in the progress log
 LOG = None
@@ -37,8 +62,9 @@ def active_model():
     """Human-readable description of which model the next call will use."""
     if os.environ.get("ANTHROPIC_API_KEY"):
         return "Anthropic / " + (MODEL or _DEFAULT_ANTHROPIC)
-    if os.environ.get("OPENAI_API_KEY"):
-        return "OpenAI / " + (MODEL or _DEFAULT_OPENAI)
+    c = _active_compat()
+    if c:
+        return c[3] + " / " + (MODEL or c[2])
     return "manual (no API key)"
 
 
@@ -88,15 +114,17 @@ def _anthropic(prompt, system, web, deep=False):
     return "".join(b.get("text", "") for b in resp.get("content", []) if b.get("type") == "text")
 
 
-def _openai(prompt, system, web):
-    model = MODEL or _DEFAULT_OPENAI
+def _openai_compat(prompt, system, env, base, default_model):
+    """One code path for every OpenAI-compatible backend (OpenAI, DeepSeek, Mistral, Groq,
+    Gemini's compat endpoint, OpenRouter). Server-side web search isn't part of this protocol,
+    so `discover()` falls back to model-knowledge sources for these providers."""
+    model = MODEL or default_model
     msgs = []
     if system:
         msgs.append({"role": "system", "content": system})
     msgs.append({"role": "user", "content": prompt})
-    headers = {"Authorization": "Bearer " + os.environ["OPENAI_API_KEY"],
-               "content-type": "application/json"}
-    resp = _post("https://api.openai.com/v1/chat/completions", headers,
+    headers = {"Authorization": "Bearer " + os.environ[env], "content-type": "application/json"}
+    resp = _post(base.rstrip("/") + "/chat/completions", headers,
                  {"model": model, "messages": msgs})
     return resp["choices"][0]["message"]["content"]
 
@@ -104,10 +132,12 @@ def _openai(prompt, system, web):
 def complete(prompt, system=None, web=False, deep=False):
     if os.environ.get("ANTHROPIC_API_KEY"):
         return _anthropic(prompt, system, web, deep)
-    if os.environ.get("OPENAI_API_KEY"):
-        return _openai(prompt, system, web)
+    c = _active_compat()
+    if c:
+        return _openai_compat(prompt, system, c[0], c[1], c[2])
     raise SystemExit(
-        "No ANTHROPIC_API_KEY or OPENAI_API_KEY set.\n"
+        "No LLM API key set (ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, "
+        "MISTRAL_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENROUTER_API_KEY).\n"
         "Use --dry-run to print the prompt, paste it into any LLM / deep-research tool,\n"
         "then save the JSON it returns and run:  python cli.py add <kb.json> <delta.json>")
 
