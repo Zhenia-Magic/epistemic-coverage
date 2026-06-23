@@ -73,6 +73,12 @@
   .strength{margin-left:6px;letter-spacing:1px;font-size:9px;vertical-align:middle;}
   .strength.s3{color:#2E8B6F;} .strength.s2{color:#8a6510;} .strength.s1{color:var(--faint);}
   .srcmeta{font-size:12px;color:var(--faint);font-style:italic;margin:1px 0 8px;overflow-wrap:anywhere;}
+  .why{margin-top:10px;padding:9px 11px;border-left:3px solid var(--line-strong);background:#FAFBFB;
+       border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:var(--muted);}
+  .why .wl{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;
+       color:var(--faint);margin-bottom:3px;}
+  .why q{color:var(--ink);font-style:italic;quotes:"“" "”";}
+  .why .conf{font-family:var(--mono);font-size:10px;color:var(--faint);margin-left:4px;white-space:nowrap;}
   .card.retracted{background:#FCF3F1;border-color:#E6C3BA;}
   .bs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
   .bs{border:1px solid var(--line);border-radius:11px;padding:13px 15px;}
@@ -107,6 +113,14 @@
     padding:9px 12px;margin:0 0 16px;display:flex;gap:8px;align-items:flex-start;}
   .flagbox{font-size:13px;color:var(--flag);background:var(--flag-bg);border-radius:8px;padding:11px 14px;margin-top:6px;
     display:flex;gap:9px;align-items:flex-start;line-height:1.5;}
+  .empty-state{text-align:center;padding:54px 28px;}
+  .empty-state .mark{width:46px;height:46px;margin:0 auto 16px;border-radius:12px;background:var(--flag-bg);
+    color:var(--flag);display:grid;place-items:center;font-family:var(--mono);font-size:21px;}
+  .empty-state h2{font-size:19px;margin:0 0 7px;}
+  .empty-state p{max-width:54ch;margin:0 auto;color:var(--muted);font-size:14px;}
+  .empty-state .empty-action{display:inline-block;margin-top:19px;background:var(--chrome);color:#fff;
+    border-radius:8px;padding:9px 15px;font-size:13px;font-weight:500;}
+  .empty-state .empty-action:hover{text-decoration:none;background:#30333c;}
   .ch{border-left:2px solid var(--line-strong);padding:2px 0 2px 16px;margin:0 0 4px 6px;position:relative;}
   .ch::before{content:"";position:absolute;left:-5px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--chrome);}
   .ch-h{font-size:14px;font-weight:600;margin-top:8px;}
@@ -150,7 +164,7 @@ const VIEWS=[
 ];
 const state={caseId:DATA&&DATA.order[0], view:"coverage", filter:null};
 const el=id=>document.getElementById(id);
-function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function rgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
 function pct(x){return Math.round(x*100)+"%";}
 function cur(){return DATA.cases[state.caseId];}
@@ -245,10 +259,13 @@ function renderCoverage(c){
     const pip=st.n?`<span class="strength s${st.n}" title="${st.label} — by study design">${"●".repeat(st.n)}${"○".repeat(3-st.n)}</span>`:"";
     const venueBits=[];
     if(s.venue) venueBits.push(esc(s.venue));
-    if(s.citations!=null) venueBits.push(`${s.citations} citation${s.citations===1?"":"s"}`);
+    if(s.citations!=null) venueBits.push(`${esc(s.citations)} citation${s.citations===1?"":"s"}`);
     const venueLine=venueBits.length?`<div class="srcmeta">${venueBits.join(" · ")}</div>`:"";
+    const pq=((s.provenance||{}).position)||{};
+    const conf=pq.extractionConfidence;
+    const why=pq.quote?`<div class="why"><span class="wl">Filed under “${esc(p.label)}” because${conf!=null?`<span class="conf">extraction confidence ${Math.round(conf*100)}%</span>`:""}</span><q>${esc(pq.quote)}</q></div>`:"";
     return `<div class="card${s.retracted?" retracted":""}" style="border-left-color:${p.hue}">
-      <div class="ct"><div class="titlewrap"><span class="title">${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a>`:esc(s.title)}</span> <span class="yr">${s.year||""}</span></div>
+      <div class="ct"><div class="titlewrap"><span class="title">${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a>`:esc(s.title)}</span> <span class="yr">${esc(s.year||"")}</span></div>
         <span class="stance" style="background:${rgba(p.hue,.13)};color:${p.hue}">${esc(p.label)}</span></div>
       ${venueLine}
       <div class="tags">
@@ -259,7 +276,7 @@ function renderCoverage(c){
         <span class="tag">conf: ${esc(s.confidence)}</span>
         ${isNew?`<span class="tag new">added v${s.addedIn}</span>`:""}
         ${rests}
-      </div></div>`;
+      </div>${why}</div>`;
   }).join("");
   const bsCards=a.blindspots.map(p=>{
     const items=[];
@@ -374,17 +391,32 @@ function renderChanges(c){
     ${items||'<div class="empty">No history yet — only the seed.</div>'}</div>`;
 }
 
+function renderEmpty(){
+  const portalAdd=document.querySelector('.pbar a[href$="/add"]');
+  const action=portalAdd
+    ? `<a class="empty-action" href="${esc(portalAdd.getAttribute("href"))}">Add the first source</a>`
+    : "";
+  return `<div class="panel empty-state">
+    <div class="mark">∅</div>
+    <h2>No sources yet</h2>
+    <p>This question is ready, but no evidence has been added. Add the first source to build its coverage, divergence, and independence views.</p>
+    ${action}
+  </div>`;
+}
+
 function render(){
   if(!DATA){el("view").innerHTML='<div class="empty">No data baked in. Run <b>python cli.py build cases/eggs.kb.json cases/covid.kb.json</b> and open the generated <b>viewer/index.html</b>.</div>';return;}
   renderChrome();
   const c=cur();
+  const empty=c.kb.sources.length===0;
+  el("tabs").style.display=empty?"none":"";
+  if(empty){state.filter=null;el("view").innerHTML=renderEmpty();return;}
   let html="";
   if(state.view==="coverage") html=renderCoverage(c);
   else if(state.view==="divergence") html=renderDivergence(c);
   else if(state.view==="independence") html=renderIndependence(c);
   else html=renderChanges(c);
   el("view").innerHTML=html;
-  el("foot").innerHTML=`Numbers computed once by <b>engine/assess.py</b> and baked in by <b>cli.py build</b> — the viewer only renders. Seed data is illustrative; provenance is filled by real ingestion (<b>prompts/ingest.md</b>). Adding a source via <b>cli.py ingest</b> then re-running <b>build</b> updates every metric and appends to the Changes tab. All cases share one renderer; a new case needs no UI change.`;
 }
 
 document.addEventListener("click",e=>{
