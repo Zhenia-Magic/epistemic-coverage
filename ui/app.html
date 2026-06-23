@@ -29,6 +29,7 @@
   input[type=file]{padding:7px;border-style:dashed;background:#FAFBFB;}
   .row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;}
   .chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);margin:9px 0 0;cursor:pointer;}
+  .srchnote{font-size:12.5px;line-height:1.55;color:var(--muted);background:#EEF4FB;border-left:3px solid #2f6296;border-radius:0 7px 7px 0;padding:9px 12px;margin:11px 0 0;}
   .chk input{width:auto;}
   .row .src{flex:0 0 160px;min-width:0;}
   .row>div{flex:1;min-width:150px;} .row .narrow{flex:0 0 90px;min-width:0;} .row .auto{flex:0 0 auto;}
@@ -149,6 +150,7 @@
       <button id="runAllBtn">Do it all ▸</button>
     </div>
     <label class="chk"><input type="checkbox" id="ocDeep"> Deep research — many searches, more thorough (web/both only)</label>
+    <p class="srchnote">ℹ <b>AI web search</b> &amp; <b>deep research</b> work only with an <b>Anthropic</b> key. With OpenAI, DeepSeek, Mistral, Groq, Gemini or OpenRouter, choose <b>Papers · OpenAlex</b> to find sources — labelling the fetched text then works with any provider.</p>
     <div class="toast" id="ocToast"></div>
     <div class="results" id="ocResults"></div>
   </div>
@@ -169,6 +171,7 @@
       <button id="findBtn">Find sources</button>
     </div>
     <label class="chk"><input type="checkbox" id="findDeep"> Deep research — many searches, more thorough (web/both only)</label>
+    <p class="srchnote">ℹ <b>AI web search</b> &amp; <b>deep research</b> work only with an <b>Anthropic</b> key. With OpenAI, DeepSeek, Mistral, Groq, Gemini or OpenRouter, choose <b>Papers · OpenAlex</b> to find sources — labelling the fetched text then works with any provider.</p>
     <div class="toast ok" id="findToast"></div>
     <div id="findManual" style="display:none">
       <label for="candIn" style="margin-top:12px">Paste the chatbot's list of sources (JSON array)</label>
