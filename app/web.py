@@ -93,7 +93,9 @@ pre .c{color:#7d8590;}
   .wrap{padding:22px 16px 64px;}
   h1{font-size:24px;}
   .thesis{grid-template-columns:1fr;gap:10px;margin-bottom:20px;}
-  .bar{gap:8px;} .bar input{flex:1 1 100%;min-width:0;}
+  .bar{gap:8px;}
+  .bar input:not([type=number]){flex:1 1 100%!important;min-width:0;}
+  .bar input[type=number]{flex:0 0 72px!important;}
   .bar .btn{flex:1;text-align:center;justify-content:center;}
   .grid{grid-template-columns:1fr;}
   .toc{gap:6px;} .cmdtbl td:first-child{white-space:normal;}

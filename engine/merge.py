@@ -14,6 +14,7 @@ Adversarial defences live here:
 """
 import re
 import datetime
+import urllib.parse
 
 HUES = ["#2E8B6F", "#B4502E", "#586A7A", "#8a6510", "#2f6296", "#7a4fa3"]
 
@@ -89,9 +90,17 @@ def clean_url(u):
     u = (u or "").strip()
     m = re.search(r"\((https?://[^)\s]+)\)", u)   # markdown [text](https://…)
     if m:
-        return m.group(1)
-    m = re.search(r"https?://[^\s\]\)>]+", u)      # first bare URL anywhere in the string
-    return m.group(0) if m else u
+        u = m.group(1)
+    else:
+        m = re.search(r"https?://[^\s\]\)>]+", u)  # first bare URL anywhere in the string
+        u = m.group(0) if m else u
+    try:
+        parsed = urllib.parse.urlsplit(u)
+    except ValueError:
+        return ""
+    # Stored source URLs are rendered as links. Keep only absolute web URLs, never executable
+    # schemes (javascript:, data:) or relative values supplied by an untrusted delta.
+    return u if parsed.scheme.lower() in ("http", "https") and parsed.hostname else ""
 
 
 def source_key(s):
@@ -121,6 +130,19 @@ def _resolve_dataset(kb, proposed):
     return cid, True
 
 
+def _short_label(s, limit=20):
+    """Trim a position's short label to <=limit chars at a WORD boundary, so the chart bar / matrix
+    header never shows a mid-word cut like 'Cold-chain reintrodu'. A single over-long word is hard-
+    cut as a last resort."""
+    s = re.sub(r"\s+", " ", str(s if s is not None else "")).strip()
+    if len(s) <= limit:
+        return s
+    cut = s[:limit]
+    if s[limit] != " " and " " in cut[1:]:   # only trim back when we'd cut mid-word
+        cut = cut[:cut.rfind(" ")]
+    return cut.rstrip(" ,;:-/")
+
+
 def _resolve_position(kb, proposed, short_label=None):
     is_new = proposed.startswith("NEW:")
     label = proposed[4:].strip() if is_new else None
@@ -137,7 +159,7 @@ def _resolve_position(kb, proposed, short_label=None):
                      lambda x: any(p["id"] == x for p in kb["positions"]))
     entry = {"id": cid, "label": nice, "hue": HUES[len(kb["positions"]) % len(HUES)]}
     if short_label:
-        entry["shortLabel"] = str(short_label)[:20].strip()  # str(): model may return non-string
+        entry["shortLabel"] = _short_label(short_label)  # word-boundary trim, never mid-word
     kb["positions"].append(entry)
     return cid, True
 
