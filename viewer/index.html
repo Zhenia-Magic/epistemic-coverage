@@ -128,6 +128,8 @@
   .ind-note.warn{color:var(--ochre);font-weight:500;}
   .indkey{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin:2px 0 14px;}
   .indkey span{display:flex;align-items:center;gap:6px;} .indkey i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+  .base .bk-ic{font-size:11px;line-height:1;color:#b4232f;flex:0 0 auto;}
+  .indkey .warn{color:#b4232f;font-style:normal;font-weight:700;}
   .domline{font-family:var(--mono);font-size:12px;color:var(--flag);background:var(--flag-bg);border-radius:8px;
     padding:9px 12px;margin:0 0 16px;display:flex;gap:8px;align-items:flex-start;}
   .flagbox{font-size:13px;color:var(--flag);background:var(--flag-bg);border-radius:8px;padding:11px 14px;margin-top:6px;
@@ -378,18 +380,21 @@ function renderDivergence(c){
 
 function renderIndependence(c){
   const a=c.assessment;
-  const KIND={dataset:{lab:"primary dataset",col:"#2f6296"},
-              primary:{lab:"own observation",col:"#2E8B6F"},
-              secondary:{lab:"secondary voice",col:"#8a6510"},
-              cycle:{lab:"circular loop",col:"#B4502E"}};
+  // Evidence-KIND swatches use an achromatic ramp (dark=primary/strong, light=secondary/weak) +
+  // a ⚠ glyph for circular — deliberately OUTSIDE the coloured stance palette so a kind can never
+  // be mistaken for a position hue.
+  const KIND={dataset:{lab:"primary dataset",col:"#222a35"},
+              primary:{lab:"own observation",col:"#222a35"},
+              secondary:{lab:"secondary voice",col:"#c4ccd4"},
+              cycle:{lab:"circular loop",icon:"⚠"}};
   const rows=a.independence.map(p=>{
     const eff=p.nEff.toFixed(1);
     const bases=(p.bases||[]).map(b=>{
       const k=KIND[b.kind]||KIND.dataset;
       const tag=k.lab+(b.secondaryOnly?" · via review only":"")+(b.weight>1?" ×"+b.weight:"");
+      const sw=k.icon?`<span class="bk-ic">${k.icon}</span>`:`<span class="bk" style="background:${k.col}"></span>`;
       return `<div class="base" title="${esc(b.label)} — ${tag}">
-        <span class="bk" style="background:${k.col}"></span>
-        <span class="bl">${esc(b.label)}</span><span class="bw">${tag}</span></div>`;
+        ${sw}<span class="bl">${esc(b.label)}</span><span class="bw">${tag}</span></div>`;
     }).join("")||`<span class="muted">—</span>`;
     const sec=p.collapsedSecondary>1?`<div class="ind-note">${p.collapsedSecondary} secondary sources (reviews / commentary / statements) counted as <b>one</b> voice — echo doesn't add independence.</div>`:"";
     const circ=(p.circular&&p.circular.length)?`<div class="ind-note warn">⚠ circular corroboration — ${p.circular.length} citation loop${p.circular.length>1?"s":""} that bottom out in no primary evidence.</div>`:"";
@@ -404,7 +409,7 @@ function renderIndependence(c){
     :`<div class="flagbox"><span>No single dataset dominates a position — and review echo / circular citation are already collapsed below, so the bases shown are genuinely distinct.</span></div>`;
   return `<div class="panel"><h3>Is the consensus real, or the same evidence counted twice?</h3>
       <p class="subnote">Each position is reduced to its <b>independent evidence bases</b>: sources sharing a dataset, echoing as reviews, or citing each other in a loop collapse into one. The number after each position is its effective count of distinct bases — the honest size of its support.</p>
-      <div class="indkey"><span><i style="background:#2f6296"></i>primary dataset</span><span><i style="background:#2E8B6F"></i>own observation</span><span><i style="background:#8a6510"></i>secondary voice (collapsed)</span><span><i style="background:#B4502E"></i>circular loop</span></div>
+      <div class="indkey"><span><i style="background:#222a35"></i>primary evidence (dataset / own data)</span><span><i style="background:#c4ccd4"></i>secondary voice (collapsed echo)</span><span><b class="warn">⚠</b> circular loop</span></div>
       ${rows}${flag}</div>`;
 }
 
