@@ -25,6 +25,7 @@
   .desc{font-size:13px;color:var(--muted);margin:0 0 12px;}
   label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px;}
   input,select,textarea{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line-strong);border-radius:8px;padding:9px 11px;}
+  input:disabled,select:disabled{opacity:.45;background:#F0F1F2;cursor:not-allowed;}
   textarea{font-family:var(--mono);font-size:12.5px;resize:vertical;}
   input[type=file]{padding:7px;border-style:dashed;background:#FAFBFB;}
   .row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;}
@@ -376,9 +377,9 @@ $("#newToggle").addEventListener("click",()=>{const b=$("#newBox");b.style.displ
 $("#createBtn").addEventListener("click",async()=>{try{const r=await api("/api/init",{id:$("#newId").value,question:$("#newQ").value});
   $("#newBox").style.display="none";$("#newId").value="";$("#newQ").value="";await loadCases(r.id);}catch(e){alert(e.message);}});
 
-// grey out the "# sources" field while "find all" is ticked
-$("#ocAll").addEventListener("change",e=>{$("#ock").disabled=e.target.checked;});
-$("#findAll").addEventListener("change",e=>{$("#k").disabled=e.target.checked;});
+// disable + grey out the "# sources" field whenever "find all" is ticked (synced on load too)
+function syncAll(chk,num){const c=$(chk),n=$(num);const f=()=>{n.disabled=c.checked;n.placeholder=c.checked?"all":"";};c.addEventListener("change",f);f();}
+syncAll("#ocAll","#ock"); syncAll("#findAll","#k");
 
 // ---- Do it all
 $("#runAllBtn").addEventListener("click",()=>{if(!need())return;busy($("#runAllBtn"),async()=>{
