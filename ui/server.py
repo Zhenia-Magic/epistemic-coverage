@@ -121,11 +121,18 @@ def list_cases():
 
 def init_case(cid, question):
     cid = "".join(c for c in (cid or "").strip().lower().replace(" ", "_") if c.isalnum() or c == "_")
+    if not cid:                                  # no id given -> derive one from the question
+        from engine.merge import slug
+        cid = slug(question or "")[:40]
     if not cid:
-        raise ValueError("Please give the case a short id (letters/numbers).")
+        raise ValueError("Please enter a question (the id is derived from it).")
     path = _case_path(cid)
-    if os.path.exists(path):
-        raise ValueError("A case with id '{}' already exists.".format(cid))
+    if os.path.exists(path):                      # keep it unique rather than erroring
+        n = 2
+        while os.path.exists(_case_path("{}_{}".format(cid, n))):
+            n += 1
+        cid = "{}_{}".format(cid, n)
+        path = _case_path(cid)
     os.makedirs(CASES, exist_ok=True)
     _write(path, empty_kb(cid, question or ""))
     return {"id": cid}

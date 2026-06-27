@@ -46,7 +46,7 @@ by construction: flooding a position with echo can neither inflate it **nor** ta
 | `engine/gaps.py` | Structure | gap analysis — where is a position's evidence thin? — that steers gap-driven deep search |
 | `engine/curate.py` | Structure | curation ops: merge / rename / tidy duplicate entities |
 | `engine/assess.py` | **Assessment** | the only place numbers are computed: distribution, **weighted (independence) distribution**, independence audit, funding skew, blindspots, cruxes |
-| `cli.py` | orchestrator | `init · show · assess · gaps · deepen · add · build · ingest · ingest-batch · discover · research · harvest · merge · rename · tidy · dups · ui · pull · push · questions · import-citations · export` |
+| `cli.py` | orchestrator | `new · init · show · assess · gaps · deepen · add · build · ingest · ingest-batch · discover · research · harvest · merge · rename · tidy · dups · ui · pull · push · questions · import-citations · export` |
 | `ui/` (`cli.py ui`) | UI | local **workstation** console: find → fetch → label → import, Curate, and **pull/push** to a portal |
 | `app/` (`python -m app.portal`) | **Deployment** | a shared multi-user **portal** (browse/search, contribute keyless, AI-retrieval docs, admin moderation) + a portable store (sqlite local / Postgres prod) the CLI pushes & pulls to |
 | `viewer/template.html` → `viewer/index.html` | UI | render-only; baked by `build`; opens with a double-click |

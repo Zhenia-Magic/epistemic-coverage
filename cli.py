@@ -286,6 +286,22 @@ def cmd_push(args):
     print("Pushed '{}' -> {} (now v{}).".format(kb["meta"]["question"], qid, res["version"]))
 
 
+def cmd_new(args):
+    """Create a new question LOCALLY (git-style): a local case file you can harvest/deepen, then
+    `push` to the portal when ready. The id is derived from the question unless you pass --id."""
+    from engine.merge import slug
+    qid = args.id or slug(args.question)[:40]
+    if not qid:
+        raise SystemExit("Give a question (or pass --id).")
+    out = args.out or "cases/{}.kb.json".format(qid)
+    if os.path.exists(out) and not args.force:
+        raise SystemExit("{} already exists — pass --id, --out, or --force.".format(out))
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    write_json(out, empty_kb(qid, args.question))
+    print("Created local question '{}' -> {}".format(args.question, out))
+    print("Next:  python cli.py harvest {}   then   python cli.py push {}".format(out, out))
+
+
 def cmd_questions(args):
     """List/search questions on the portal."""
     from app import client
@@ -691,6 +707,9 @@ def main():
     s.add_argument("--portal"); s.add_argument("--as", dest="as_", help="contributor name")
     s.add_argument("--token", help="portal admin token (or set EPISTEMIC_ADMIN_TOKEN)")
     s.set_defaults(fn=cmd_push)
+    s = sub.add_parser("new", help="create a new question locally (git-style); push when ready")
+    s.add_argument("question"); s.add_argument("--id"); s.add_argument("--out")
+    s.add_argument("--force", action="store_true"); s.set_defaults(fn=cmd_new)
     s = sub.add_parser("questions"); s.add_argument("--search"); s.add_argument("--portal")
     s.set_defaults(fn=cmd_questions)
 
