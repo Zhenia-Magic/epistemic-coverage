@@ -231,7 +231,16 @@ def merge_delta(kb, delta):
         report["reason"] = src.get("offTopicReason") or "not relevant to the question"
         return report
 
-    if any(source_key(s) == source_key(src) for s in kb["sources"]):
+    # Refuse a duplicate by source_key (same url, or same title+year when url-less) AND by
+    # normalized title+year even when the urls differ — the same paper often appears under two urls
+    # (publisher vs PMC vs DOI), and counting it twice fakes independence.
+    t_norm, yr = norm(src.get("title")), str(src.get("year") or "")
+    def _dup(s):
+        if source_key(s) == source_key(src):
+            return True
+        return bool(t_norm) and len(t_norm) >= 10 and norm(s.get("title")) == t_norm and \
+            str(s.get("year") or "") == yr
+    if any(_dup(s) for s in kb["sources"]):
         report["duplicate"] = True
         return report
 

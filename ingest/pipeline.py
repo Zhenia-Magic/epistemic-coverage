@@ -29,9 +29,9 @@ _DS_HINT = ('EXISTING DATASETS — the underlying PRIMARY cohorts / trials / bio
 _FAC_HINT = ('EXISTING FACTORS — reference by EXACT label; add a new factor only for a genuinely '
              'new dimension (do not restate an existing one in new words):')
 _EV_HINT = 'EVIDENCE TYPES in use (choose the closest; "NEW:<label>" only if none fit):'
-_POP_HINT = ('POPULATIONS in use — the studied human GROUP (region / menopausal status / age), '
-             'NOT the study design. Reuse a term, prefer broad buckets, or "—" if not '
-             'population-specific:')
+_POP_HINT = ('POPULATIONS in use — the studied GROUP (region / menopausal status / age, or '
+             '"Mice" / "Rats" / "In vitro" for non-human studies), NOT the study design. Reuse a '
+             'term, prefer broad buckets, or "—" if not population-specific:')
 _SRC_HINT = ('SOURCES ALREADY IN THE KB — if THIS source\'s evidence IS one of these (a commentary '
              'on it, or it cites it as its main support), put "SRC:<id>" in restsOn instead of '
              'inventing a dataset. That is how echo and circular citation get caught:')
@@ -69,9 +69,11 @@ _RULES = """Rules (apply to each source):
   Government/public, Nonprofit/charity, Academic/institutional. Use "Undisclosed" if the text
   states no funding/COI — do NOT assume independence when it is silent.
 - evidence: the closest EXISTING evidence type above; "NEW:<label>" only if none fit.
-- population: the studied human GROUP (region, menopausal status, age band) — NOT the study
-  design (that is "evidence"). Reuse an existing term; prefer broad buckets over hyper-specific
-  ones; "—" if not population-specific.
+- population: the studied GROUP (region, menopausal status, age band) — NOT the study design (that
+  is "evidence"). Reuse an existing term; prefer broad buckets; "—" if not population-specific.
+  If the study is NOT in humans, say so here: use "Mice", "Rats", "Animal model", or "In vitro /
+  cell" — never leave an animal or cell study looking like human evidence; that distinction is the
+  whole point of the population tag for a clinical question.
 - confidence: the source's OWN stated strength (high/moderate/low/unstated).
 - provenance: for position and restsOn, quote ONE COMPLETE verbatim sentence from the text that
   states the actual finding/stance (the direction of the association or the conclusion) +
@@ -87,7 +89,8 @@ _RULES = """Rules (apply to each source):
 _SCHEMA = ('{"source":{"title":"...","year":2020,"url":"...",\n'
            '"relevant":true,"offTopicReason":"(only if relevant=false)",\n'
            '"position":"pos_id or NEW:Full label",\n'
-           '"positionShort":"≤18-char complete phrase for the chart bar, e.g. \'Increases risk\' or \'No clear link\'",\n'
+           '"positionShort":"≤18-char plain summary of the position DIRECTION for the chart bar '
+           '(e.g. \'Increases risk\', \'No clear effect\', \'Protective\') — NEVER one study metric/endpoint or jargon",\n'
            '"authors":["Surname, F.","..."]  (copy from the Authors: line if present),\n'
            '"venue":"journal/source name if shown","retracted":false  (true only if the text flags a retraction),\n'
            '"evidence":"...","funding":"independent|industry","population":"...","confidence":"moderate",\n'

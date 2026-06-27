@@ -66,8 +66,10 @@ multiplying via paraphrase as a case grows):
   funder/affiliation has a commercial stake (trade groups, food/pharma; for reviews weigh
   author COI); else "independent".
 - evidence: the closest EXISTING evidence type; "NEW:<label>" only if none fit.
-- population: the studied human GROUP (region / menopausal status / age) — NOT the study design
-  (that is `evidence`). Reuse a term; prefer broad buckets; "—" if not population-specific.
+- population: the studied GROUP (region / menopausal status / age) — NOT the study design
+  (that is `evidence`). Reuse a term; prefer broad buckets; "—" if not population-specific. For a
+  non-human study say so: "Mice" / "Rats" / "Animal model" / "In vitro / cell" — never let an
+  animal or cell study look like human evidence.
 - confidence: the source's OWN stated strength (high/moderate/low/unstated), not yours.
 - provenance: for position and restsOn, quote ONE COMPLETE verbatim sentence that states the
   actual finding/stance (direction of the association or the conclusion) + extractionConfidence

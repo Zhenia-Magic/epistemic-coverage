@@ -296,8 +296,10 @@ function renderCoverage(c){
     const venueLine=venueBits.length?`<div class="srcmeta">${venueBits.join(" · ")}</div>`:"";
     const pq=((s.provenance||{}).position)||{};
     const qn=q=>String(q||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
-    // Drop a "quote" that's just the paper's title echoed back — it justifies nothing.
-    if(pq.quote && qn(pq.quote)===qn(s.title)) pq.quote="";
+    // Drop a "quote" that's just the paper's title echoed back — it justifies nothing. Substring
+    // match (not exact) so a "… - PMC" / publisher suffix on the title still counts as a title-echo.
+    if(pq.quote){const q=qn(pq.quote),t=qn(s.title);
+      if(q && t && (q===t || (q.length>=12 && (t.indexOf(q)>=0||q.indexOf(t)>=0)))) pq.quote="";}
     const conf=pq.extractionConfidence;
     const confHtml=conf!=null?`<span class="conf${conf<0.5?" low":""}" title="How sure the labeller was that this quote justifies placing the source under “${esc(p.label)}”. Lower = more of a judgement call, worth checking against the source.">${conf<0.5?"⚠ ":""}Labelling confidence: ${Math.round(conf*100)}%${conf<0.5?" — judgement call":""}</span>`:"";
     const why=pq.quote?`<div class="why"><span class="wl">Filed under “${esc(p.label)}” because</span><q>${esc(pq.quote)}</q>${confHtml}</div>`:"";
