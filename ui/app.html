@@ -424,20 +424,28 @@ function renderGaps(){
   $("#gapAll").addEventListener("change",e=>document.querySelectorAll(".gapck").forEach(ck=>ck.checked=e.target.checked));
   $("#gapsSearchBtn").disabled=false;
 }
+function gapsErr(e){
+  const m=(e&&e.message)||"error";
+  toast($("#gapsToast"), m==="not found"?"Restart the console (python cli.py ui) to enable gaps.":m,"warn");
+}
 $("#gapsBtn").addEventListener("click",()=>{if(!need())return;busy($("#gapsBtn"),async()=>{
-  const r=await api("/api/gaps",{id:caseId()});
-  GAPS=r.gaps||[]; renderGaps();
-  toast($("#gapsToast"),GAPS.length?`${GAPS.length} thin spot(s) — tick the ones to pursue, then search.`:"Looking solid — no gaps.",GAPS.length?"warn":"ok");
+  try{
+    const r=await api("/api/gaps",{id:caseId()});
+    GAPS=r.gaps||[]; renderGaps();
+    toast($("#gapsToast"),GAPS.length?`${GAPS.length} thin spot(s) — tick the ones to pursue, then search.`:"Looking solid — every position rests on independent primary evidence.",GAPS.length?"warn":"ok");
+  }catch(e){gapsErr(e);}
 },"Reading…");});
 $("#gapsSearchBtn").addEventListener("click",()=>{if(!need())return;busy($("#gapsSearchBtn"),async()=>{
   const queries=[...document.querySelectorAll(".gapck")].filter(c=>c.checked).map(c=>GAPS[+c.dataset.i].query);
   if(!queries.length){toast($("#gapsToast"),"Select at least one gap.","warn");return;}
   toast($("#gapsToast"),`Searching ${queries.length} gap(s)…`,"warn");
-  const r=await api("/api/gaps/search",{id:caseId(),queries,source:$("#gapsSource").value});
-  const c=r.candidates||[];
-  if(c.length){renderCandidates(c);$("#candidates").scrollIntoView({behavior:"smooth",block:"center"});
-    toast($("#gapsToast"),`${c.length} new candidate(s) — review & label them in “Fetch & label” above.`,"ok");}
-  else toast($("#gapsToast"),"No NEW sources found for these gaps. Try AI + Papers, or a different gap.","warn");
+  try{
+    const r=await api("/api/gaps/search",{id:caseId(),queries,source:$("#gapsSource").value});
+    const c=r.candidates||[];
+    if(c.length){renderCandidates(c);$("#candidates").scrollIntoView({behavior:"smooth",block:"center"});
+      toast($("#gapsToast"),`${c.length} new candidate(s) — review & label them in “Fetch & label” above.`,"ok");}
+    else toast($("#gapsToast"),"No NEW sources found for these gaps. Try AI + Papers, or a different gap.","warn");
+  }catch(e){gapsErr(e);}
 },"Searching…",true);});
 
 let _poll=null;

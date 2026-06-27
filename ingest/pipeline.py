@@ -42,16 +42,19 @@ _RULES = """Rules (apply to each source):
   "relevant": false and give a one-line "offTopicReason" — and do NOT invent a position, datasets,
   or factors for it. Only label sources that genuinely speak to the question. When in doubt and
   the source is clearly on-topic, set "relevant": true.
-- position: the single stance the source takes ON THE QUESTION ASKED. REUSE an existing position
-  whenever the source makes a stance already listed — even if worded differently or framed
-  mechanistically. "NEW:<label>" only for a genuinely distinct claim. A mechanism (e.g. "IGF-1
-  raises risk") is a FACTOR, not a position. Never create near-duplicates like "X increases risk"
-  vs "mechanisms make X plausible".
-  A study ABOUT the debate itself — how sources frame, fund, communicate, or bias the topic (e.g.
-  "industry-funded orgs understate the risk") — is NOT a position. Assign it the stance it
-  supports on the actual question (a framing critique that risks are understated supports the
-  "harmful/cautious" position), and record the bias angle via funding and/or a factor — never as
-  its own position camp.
+- position: the single DIRECTIONAL stance the source takes ON THE QUESTION — an actual answer to it
+  (e.g. increases / decreases / no clear effect / it depends). REUSE an existing position whenever
+  the source argues a stance already listed, even if worded differently. "NEW:<label>" only for a
+  genuinely distinct directional answer; keep the whole set small (~3-5).
+  LITMUS: if you cannot phrase it as an answer to the question, it is NOT a position — it is a FACTOR.
+  These are FACTORS, never positions, even when the paper is mostly about them: a mechanism / pathway
+  ("IGF-1 raises risk", "receptor genetics modulate MI susceptibility"); a biomarker or surrogate
+  ("raises LDL"); a subgroup / moderator / susceptibility factor (diabetics, a gene variant); or a
+  meta / framing / funding observation ("industry-funded orgs understate the risk"). For ANY of these,
+  assign the source the closest existing position its overall direction supports — or the most neutral
+  "no clear effect / it depends" camp if it takes no directional stance on the question — and record
+  the specific mechanism / biomarker / subgroup / framing angle as a factorWeight. Do NOT mint a new
+  position camp for it.
 - restsOn: the underlying PRIMARY evidence — named cohorts, trials, or biobanks (e.g. Nurses'
   Health Study, EPIC, a specific RCT). A review or meta-analysis restsOn the cohorts/trials it
   POOLS — NOT "the literature", "studies through <year>", or a label that just describes this

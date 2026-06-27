@@ -46,11 +46,14 @@ title, url, and full text / transcript / abstract:
 
 Rules (these exist to PREVENT entity proliferation — positions/datasets/factors/populations
 multiplying via paraphrase as a case grows):
-- position: REUSE an existing position whenever the source argues a stance already listed —
-  even if worded differently or framed mechanistically. "NEW:<label>" only for a genuinely
-  distinct claim. A mechanism (e.g. "IGF-1 raises risk") is a FACTOR, not a position. Keep the
-  set small (~3-5); never create near-duplicates ("X increases risk" vs "mechanisms make X
-  plausible").
+- position: the DIRECTIONAL answer the source gives to the QUESTION (increases / decreases / no
+  clear effect / it depends). REUSE an existing position whenever the source argues a stance already
+  listed; "NEW:<label>" only for a genuinely distinct directional answer; keep the set small (~3-5).
+  LITMUS: if you can't phrase it as an answer to the question, it is NOT a position — it is a FACTOR.
+  A mechanism/pathway ("receptor genetics modulate MI susceptibility"), a biomarker ("raises LDL"), a
+  subgroup/susceptibility factor (diabetics, a gene variant), or a framing/funding point are all
+  FACTORS — assign the closest existing position the source's direction supports (or the neutral
+  "no clear effect / it depends" camp) and record the specifics as a factorWeight; never a new camp.
 - restsOn: the underlying PRIMARY evidence — named cohorts / trials / biobanks. A review or
   meta-analysis restsOn the cohorts it POOLS, NOT "the literature" / "studies through <year>" /
   a label describing the paper itself. Same cohort across sources => SAME label. If the cohorts
