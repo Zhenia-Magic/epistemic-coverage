@@ -289,10 +289,8 @@ def cmd_push(args):
 def cmd_new(args):
     """Create a new question LOCALLY (git-style): a local case file you can harvest/deepen, then
     `push` to the portal when ready. The id is derived from the question unless you pass --id."""
-    from engine.merge import slug
-    qid = args.id or slug(args.question)[:40]
-    if not qid:
-        raise SystemExit("Give a question (or pass --id).")
+    import uuid
+    qid = args.id or uuid.uuid4().hex[:12]        # same id format the portal mints
     out = args.out or "cases/{}.kb.json".format(qid)
     if os.path.exists(out) and not args.force:
         raise SystemExit("{} already exists — pass --id, --out, or --force.".format(out))

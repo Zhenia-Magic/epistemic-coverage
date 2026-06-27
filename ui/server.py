@@ -121,11 +121,11 @@ def list_cases():
 
 def init_case(cid, question):
     cid = "".join(c for c in (cid or "").strip().lower().replace(" ", "_") if c.isalnum() or c == "_")
-    if not cid:                                  # no id given -> derive one from the question
-        from engine.merge import slug
-        cid = slug(question or "")[:40]
-    if not cid:
-        raise ValueError("Please enter a question (the id is derived from it).")
+    if not (question or "").strip() and not cid:
+        raise ValueError("Please enter a question.")
+    if not cid:                                  # no id given -> mint one like the portal does
+        import uuid
+        cid = uuid.uuid4().hex[:12]
     path = _case_path(cid)
     if os.path.exists(path):                      # keep it unique rather than erroring
         n = 2
