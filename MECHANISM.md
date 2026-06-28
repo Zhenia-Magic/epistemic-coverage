@@ -181,6 +181,12 @@ meta-flag: "this root is read both ways" (contested evidence).
    "asserted, not directly present" and can be down-weighted or shown distinctly. (Open: do we
    count it fully in v1?)
 
+5b. **Non-human evidence on a clinical question.** A root backed **only** by animal / in-vitro
+   sources (per the `population` tag: Mice, Rats, In vitro, …) is weaker evidence for a *human*
+   question, so it counts at **half** — same mechanism as the secondary-only halving, and the two
+   stack. A root that any human source also rests on keeps full weight. This needs the population
+   tag to be set, so it only fires on sources labelled with the animal/in-vitro convention.
+
 6. **Same dataset under multiple positions** → counts once per position; optional "contested"
    meta-flag. Not double-counting — independence is a within-position question.
 

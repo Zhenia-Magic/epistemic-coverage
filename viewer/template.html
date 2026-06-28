@@ -393,7 +393,7 @@ function renderIndependence(c){
     const eff=p.nEff.toFixed(1);
     const bases=(p.bases||[]).map(b=>{
       const k=KIND[b.kind]||KIND.dataset;
-      const tag=k.lab+(b.secondaryOnly?" · via review only":"")+(b.weight>1?" ×"+b.weight:"");
+      const tag=k.lab+(b.secondaryOnly?" · via review only":"")+(b.nonHuman?" · animal / in-vitro":"")+(b.weight>1?" ×"+b.weight:"");
       const sw=k.icon?`<span class="bk-ic">${k.icon}</span>`:`<span class="bk" style="background:${k.col}"></span>`;
       return `<div class="base" title="${esc(b.label)} — ${tag}">
         ${sw}<span class="bl">${esc(b.label)}</span><span class="bw">${tag}</span></div>`;

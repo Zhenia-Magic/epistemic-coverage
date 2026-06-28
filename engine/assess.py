@@ -28,6 +28,7 @@ def _root_incidence(kb, res):
     for s in kb["sources"]:
         src_by_pos.setdefault(s["position"], []).append(s)
     secondary_only = res["secondary_only"]
+    nonhuman_only = res.get("nonhuman_only", frozenset())
     per_pos = {}
     for p in kb["positions"]:
         weights = {}
@@ -36,7 +37,8 @@ def _root_incidence(kb, res):
                 if r.startswith("secpool:") or r.startswith("cycle:"):
                     weights[r] = 1            # a COLLAPSED voice counts once, no matter how many
                 else:                          #   sources fell into it (robust to echo-flooding both
-                    weights[r] = weights.get(r, 0) + _roots.root_strength(r, secondary_only)
+                    weights[r] = weights.get(r, 0) + _roots.root_strength(
+                        r, secondary_only, nonhuman_only)   # halved for review-only / animal roots
         per_pos[p["id"]] = weights             #   ways); the source count is surfaced separately
     return per_pos
 
@@ -157,15 +159,20 @@ def cruxes(kb):
     return out
 
 
-def _root_label(kb, rk, weight, secondary_only):
+def _root_label(kb, rk, weight, secondary_only, nonhuman=frozenset()):
     """Human-readable description of a resolved root for the 'show your work' breakdown."""
+    notes = []
+    if rk in secondary_only:
+        notes.append("cited only via a review")
+    if rk in nonhuman:
+        notes.append("animal / in-vitro")
+    suffix = (" — " + ", ".join(notes)) if notes else ""
     if rk.startswith("ds:"):
-        lbl = _ds_label(kb, rk[3:])
-        return lbl + (" — cited only via a review" if rk in secondary_only else "")
+        return _ds_label(kb, rk[3:]) + suffix
     if rk.startswith("prim:"):
         sid = rk[5:]
         t = next((s.get("title") for s in kb["sources"] if s["id"] == sid), sid)
-        return (t or sid)[:60] + " — its own primary observation"
+        return (t or sid)[:60] + (suffix or " — its own primary observation")
     if rk.startswith("secpool:"):
         return "secondary literature (reviews/commentary counted as one voice)"
     if rk.startswith("cycle:"):
@@ -189,6 +196,7 @@ def independence(kb):
     res = _roots.resolve(kb)
     inc = _root_incidence(kb, res)
     sec_only = res["secondary_only"]
+    nonhuman = res.get("nonhuman_only", frozenset())
     circ_by_pos = {}
     for c in res["circular"]:
         for pid in c["positions"]:
@@ -206,8 +214,8 @@ def independence(kb):
                 top_key, top_w = rk, w
         conc = (top_w / total_w) if total_w else 0
         bases = sorted(
-            ({"key": rk, "label": _root_label(kb, rk, w, sec_only), "kind": res["kind"][rk],
-              "weight": round(w, 2), "secondaryOnly": rk in sec_only}
+            ({"key": rk, "label": _root_label(kb, rk, w, sec_only, nonhuman), "kind": res["kind"][rk],
+              "weight": round(w, 2), "secondaryOnly": rk in sec_only, "nonHuman": rk in nonhuman}
              for rk, w in weights.items()), key=lambda b: -b["weight"])
         collapsed_secondary = sum(1 for s in mine
                                   if ("secpool:" + p["id"]) in res["source_roots"].get(s["id"], ()))

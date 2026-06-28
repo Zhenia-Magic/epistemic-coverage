@@ -47,6 +47,22 @@ def tier_of(kb, source):
     return _TIER.get(ev, "primary")
 
 
+# population tokens / phrases that mark a NON-human study (animal model or in-vitro). Token match
+# for short words (so "moderate" can't match "rat"); phrase match for the multi-word ones.
+_NONHUMAN_TOKENS = {"mice", "mouse", "murine", "rat", "rats", "rodent", "rodents", "animal",
+                    "animals", "rabbit", "rabbits", "porcine", "swine", "canine", "feline",
+                    "zebrafish", "drosophila", "bovine", "ovine", "vitro"}
+_NONHUMAN_PHRASES = ("in vitro", "ex vivo", "cell line", "cell culture", "animal model")
+
+
+def _is_nonhuman(source):
+    """True if the source's population marks it as an animal or in-vitro study (see prompt rule)."""
+    p = _norm(source.get("population"))
+    if not p:
+        return False
+    return bool(set(p.split()) & _NONHUMAN_TOKENS) or any(ph in p for ph in _NONHUMAN_PHRASES)
+
+
 def _edges(source):
     """Split a source's restsOn into (dataset ids, source ids). Source edges are stored as
     'src:<id>'; everything else is a dataset root."""
@@ -158,6 +174,16 @@ def resolve(kb):
     all_ds = {r for rs in source_roots.values() for r in rs if r.startswith("ds:")}
     secondary_only = all_ds - primary_ds
 
+    # a root is 'non-human only' if EVERY source resting on it is an animal / in-vitro study — it's
+    # weaker evidence for a human/clinical question, so it counts at half (like secondary-only).
+    human, animal = set(), set()
+    for s in kb["sources"]:
+        target = animal if _is_nonhuman(s) else human
+        for r in source_roots[s["id"]]:
+            if not (r.startswith("secpool:") or r.startswith("cycle:")):  # collapsed voices: n/a
+                target.add(r)
+    nonhuman_only = animal - human
+
     def kind_of(r):
         return {"d": "dataset", "p": "primary", "s": "secondary", "c": "cycle"}[
             ("d" if r.startswith("ds:") else "p" if r.startswith("prim:")
@@ -165,10 +191,16 @@ def resolve(kb):
     kinds = {r: kind_of(r) for rs in source_roots.values() for r in rs}
 
     return {"source_roots": source_roots, "circular": circular,
-            "secondary_only": secondary_only, "kind": kinds}
+            "secondary_only": secondary_only, "nonhuman_only": nonhuman_only, "kind": kinds}
 
 
-def root_strength(root_key, secondary_only):
-    """Independence weight a root contributes. A dataset known only through a secondary source
-    counts at half (we heard about it, no primary source brought it in). See MECHANISM.md §6.5."""
-    return 0.5 if root_key in secondary_only else 1.0
+def root_strength(root_key, secondary_only, nonhuman_only=frozenset()):
+    """Independence weight a root contributes. Halved for a dataset known only through a secondary
+    source (we heard about it, no primary source brought it in) AND halved for a root backed only by
+    animal / in-vitro studies (weak evidence for a human question). See MECHANISM.md §6."""
+    w = 1.0
+    if root_key in secondary_only:
+        w *= 0.5
+    if root_key in nonhuman_only:
+        w *= 0.5
+    return w

@@ -160,3 +160,29 @@ class GapTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NonHumanTests(unittest.TestCase):
+    def _s2(self, sid, pos, ev, rests, pop):
+        d = _s(sid, pos, ev, rests); d["population"] = pop; return d
+
+    def test_animal_only_root_is_halved(self):
+        from engine.roots import resolve, root_strength
+        kb = _kb([self._s2("m", "X", "Mechanistic", ["Dmouse"], "Mice")])
+        res = resolve(kb)
+        self.assertIn("ds:Dmouse", res["nonhuman_only"])
+        self.assertEqual(root_strength("ds:Dmouse", res["secondary_only"], res["nonhuman_only"]), 0.5)
+
+    def test_human_source_on_root_keeps_full_weight(self):
+        from engine.roots import resolve, root_strength
+        kb = _kb([self._s2("h", "X", "Observational", ["D"], "US adults"),
+                  self._s2("m", "X", "Mechanistic", ["D"], "Mice")])
+        res = resolve(kb)
+        self.assertNotIn("ds:D", res["nonhuman_only"])
+        self.assertEqual(root_strength("ds:D", res["secondary_only"], res["nonhuman_only"]), 1.0)
+
+    def test_population_word_does_not_falsematch(self):
+        from engine.roots import _is_nonhuman
+        self.assertFalse(_is_nonhuman({"population": "moderate-risk adults"}))   # 'rat' in 'moderate'
+        self.assertTrue(_is_nonhuman({"population": "Rats"}))
+        self.assertTrue(_is_nonhuman({"population": "In vitro / cell"}))
