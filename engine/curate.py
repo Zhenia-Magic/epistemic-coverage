@@ -33,6 +33,57 @@ def _vocab_kind(kind):
     return kind
 
 
+def dedupe_sources(kb):
+    """Remove duplicate SOURCES (the same paper ingested twice): same canonical id (DOI/PMID/PMCID),
+    or same year with one title a prefix of the other (catches publisher-vs-PMC title-truncation).
+    Keeps the entry with the most text/provenance; re-points factor provenance off the dropped ids."""
+    from engine.merge import paper_ident, norm
+    srcs = kb["sources"]
+
+    def _richness(s):
+        return (len((s.get("provenance") or {})), len(s.get("restsOn") or []), len(s.get("title") or ""))
+
+    keep, dropped = [], []                         # dropped: (loser_id, winner_id)
+    for s in srcs:
+        ident = paper_ident(s)
+        tn, yr = norm(s.get("title")), str(s.get("year") or "")
+        match = None
+        for k in keep:
+            ki, ktn, kyr = paper_ident(k), norm(k.get("title")), str(k.get("year") or "")
+            same_id = ident and ki == ident
+            same_paper = (yr and yr == kyr and tn and ktn and min(len(tn), len(ktn)) >= 25 and
+                          (tn.startswith(ktn) or ktn.startswith(tn)))
+            if same_id or same_paper:
+                match = k
+                break
+        if not match:
+            keep.append(s)
+            continue
+        winner, loser = (s, match) if _richness(s) > _richness(match) else (match, s)
+        if winner is s:                            # the new one is richer: swap it in
+            keep[keep.index(match)] = s
+        dropped.append((loser["id"], winner["id"]))
+
+    if not dropped:
+        return {"version": kb["meta"].get("version", 0), "summary": "no duplicate sources found",
+                "removed": []}
+    remap = dict(dropped)
+    kept_ids = {s["id"] for s in keep}
+    kb["sources"] = keep
+    for f in kb["factors"]:                        # re-point or drop provenance of removed sources
+        prov, seen = [], set()
+        for p in f.get("provenance", []):
+            sid = remap.get(p.get("source"), p.get("source"))
+            if sid in kept_ids and (sid, p.get("pos")) not in seen:
+                seen.add((sid, p.get("pos"))); p["source"] = sid; prov.append(p)
+        f["provenance"] = prov
+        for k in list(f.get("weights", {})):       # (weights are keyed by position, untouched)
+            pass
+    removed = [{"removed": lid, "kept": wid} for lid, wid in dropped]
+    return dict(_commit(kb, "dedupe-sources",
+                        "removed {} duplicate source(s)".format(len(dropped))), removed=removed)
+
+
 def _commit(kb, action, summary):
     v = (kb["meta"].get("version", 0) or 0) + 1
     kb["meta"]["version"] = v

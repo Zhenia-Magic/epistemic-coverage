@@ -182,6 +182,20 @@ def cmd_rename(args):
     _curate_write(args, report)
 
 
+def cmd_dedupe(args):
+    """Remove duplicate SOURCES (same paper ingested under two links / title variants)."""
+    from engine import curate
+    kb = read_json(args.kb)
+    report = curate.dedupe_sources(kb)
+    if report.get("removed"):
+        write_json(args.kb, kb)
+        for r in report["removed"]:
+            print("  removed {}  (dup of {})".format(r["removed"], r["kept"]))
+    print(report["summary"] + ("  (KB now v{})".format(report["version"]) if report.get("removed") else ""))
+    if getattr(args, "build", False):
+        _build_viewer([args.kb])
+
+
 def cmd_tidy(args):
     from engine import curate
     kb = read_json(args.kb)
@@ -722,6 +736,8 @@ def main():
     s = sub.add_parser("rename"); s.add_argument("kb"); s.add_argument("type", choices=TYPES)
     s.add_argument("ref"); s.add_argument("label"); s.add_argument("--build", action="store_true")
     s.set_defaults(fn=cmd_rename)
+    s = sub.add_parser("dedupe", help="remove duplicate SOURCES (same paper ingested twice)")
+    s.add_argument("kb"); s.add_argument("--build", action="store_true"); s.set_defaults(fn=cmd_dedupe)
     s = sub.add_parser("dups", help="list likely-duplicate entities to merge")
     s.add_argument("kb"); s.add_argument("--threshold", type=float, default=0.4)
     s.set_defaults(fn=cmd_dups)

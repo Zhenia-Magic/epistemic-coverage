@@ -109,6 +109,22 @@ def source_key(s):
     return "t:" + norm(s.get("title")) + ":" + str(s.get("year") or "")
 
 
+def paper_ident(s):
+    """A canonical paper identifier (DOI / PMID / PMCID) pulled from the source's url — so the SAME
+    paper under two links (publisher vs PMC vs doi.org) dedupes to one. None if no id is present."""
+    u = clean_url(s.get("url") or "")
+    m = re.search(r"10\.\d{4,9}/[^\s?#\"'<>]+", u)
+    if m:
+        return "doi:" + norm(m.group(0).rstrip(").,;'\""))
+    m = re.search(r"PMC\d{4,}", u, re.I)
+    if m:
+        return "pmc:" + m.group(0).upper()
+    m = re.search(r"(?:pubmed\.ncbi\.nlm\.nih\.gov/|/pubmed/)(\d{6,9})", u)
+    if m:
+        return "pmid:" + m.group(1)
+    return None
+
+
 def _resolve_source_ref(kb, ref):
     """Resolve a labeller's reference to another source (by exact id, else normalized title) to its
     id, or None if that source isn't in the KB yet. Used for source->source derivation edges."""
@@ -231,12 +247,17 @@ def merge_delta(kb, delta):
         report["reason"] = src.get("offTopicReason") or "not relevant to the question"
         return report
 
-    # Refuse a duplicate by source_key (same url, or same title+year when url-less) AND by
-    # normalized title+year even when the urls differ — the same paper often appears under two urls
-    # (publisher vs PMC vs DOI), and counting it twice fakes independence.
+    # Refuse a duplicate by: same source_key (url, or title+year when url-less); same canonical
+    # paper identifier (DOI/PMID/PMCID) even under a different url; or same normalized title+year.
+    # The same paper routinely appears under publisher / PMC / DOI links, and counting it twice
+    # fakes independence.
     t_norm, yr = norm(src.get("title")), str(src.get("year") or "")
+    ident = paper_ident(src)
+
     def _dup(s):
         if source_key(s) == source_key(src):
+            return True
+        if ident and paper_ident(s) == ident:
             return True
         return bool(t_norm) and len(t_norm) >= 10 and norm(s.get("title")) == t_norm and \
             str(s.get("year") or "") == yr

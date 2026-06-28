@@ -5,15 +5,19 @@ third-party packages. PDF (pypdf) and docx (python-docx) are imported lazily, so
 required only if you actually feed those formats. See requirements.txt.
 """
 import io
+import http.client
+import ipaddress
 import json
 import os
 import re
+import socket
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
 MAX_CHARS = 24000  # keep the extraction prompt within a sane token budget
+MAX_FETCH_BYTES = int(os.environ.get("EPISTEMIC_MAX_FETCH_BYTES", str(12 * 1024 * 1024)))
 BLOCK_CODES = {401, 403, 429, 451}  # publisher/bot blocks worth a reader-proxy retry
 # markers of a bot-wall / CAPTCHA / interstitial page — NOT real article text
 _BLOCK_MARKERS = (
@@ -33,10 +37,117 @@ def _looks_blocked(text, title):
     return len((text or "").strip()) < 200  # e.g. "Redirecting" — nothing usable
 
 
+def _public_addrinfo(host, port):
+    try:
+        addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    except socket.gaierror as e:
+        raise ValueError("could not resolve URL host: {}".format(e))
+    if not addresses:
+        raise ValueError("URL host resolved to no addresses")
+    for info in addresses:
+        address = info[4][0].split("%", 1)[0]
+        try:
+            public = ipaddress.ip_address(address).is_global
+        except ValueError:
+            public = False
+        if not public:
+            raise ValueError("refusing to fetch a local/private address")
+    return addresses
+
+
+def _validate_remote_url(url):
+    """Reject URLs that can reach the portal host or another non-public network.
+
+    Validation runs for the initial URL and every redirect. Hostnames are resolved before the
+    request and every returned address must be globally routable; mixed public/private DNS
+    answers are rejected rather than selecting the convenient one.
+    """
+    try:
+        parsed = urllib.parse.urlsplit(url)
+        host = parsed.hostname
+        port = parsed.port or (443 if parsed.scheme.lower() == "https" else 80)
+    except ValueError as e:
+        raise ValueError("invalid URL: {}".format(e))
+    if parsed.scheme.lower() not in ("http", "https") or not host:
+        raise ValueError("only absolute http(s) URLs can be fetched")
+    if parsed.username or parsed.password:
+        raise ValueError("URLs containing credentials cannot be fetched")
+    if host.rstrip(".").lower() == "localhost" or host.lower().endswith(".localhost"):
+        raise ValueError("refusing to fetch a local/private address")
+    _public_addrinfo(host, port)
+    return url
+
+
+class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        _validate_remote_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _connect_public(host, port, timeout, source_address=None):
+    """Resolve once, validate every answer, then connect to that numeric address.
+
+    Pinning the connection to the validated result closes the DNS-rebinding gap that would exist
+    if validation and ``socket.create_connection((hostname, ...))`` performed separate lookups.
+    """
+    errors = []
+    for family, socktype, proto, _, sockaddr in _public_addrinfo(host, port):
+        sock = None
+        try:
+            sock = socket.socket(family, socktype, proto)
+            sock.settimeout(timeout)
+            if source_address:
+                sock.bind(source_address)
+            sock.connect(sockaddr)
+            return sock
+        except OSError as e:
+            errors.append(e)
+            if sock:
+                sock.close()
+    raise errors[-1] if errors else OSError("could not connect to URL host")
+
+
+class _SafeHTTPConnection(http.client.HTTPConnection):
+    def connect(self):
+        self.sock = _connect_public(self.host, self.port, self.timeout, self.source_address)
+
+
+class _SafeHTTPSConnection(http.client.HTTPSConnection):
+    def connect(self):
+        sock = _connect_public(self.host, self.port, self.timeout, self.source_address)
+        self.sock = self._context.wrap_socket(sock, server_hostname=self.host)
+
+
+class _SafeHTTPHandler(urllib.request.HTTPHandler):
+    handler_order = 100
+
+    def http_open(self, req):
+        return self.do_open(_SafeHTTPConnection, req)
+
+
+class _SafeHTTPSHandler(urllib.request.HTTPSHandler):
+    handler_order = 100
+
+    def https_open(self, req):
+        return self.do_open(_SafeHTTPSConnection, req, context=self._context,
+                            check_hostname=self._check_hostname)
+
+
+# Ignore ambient HTTP(S)_PROXY settings: a proxy would perform its own DNS lookup and undo the
+# address pinning above. Every request and redirect goes through the safe connection handlers.
+_SAFE_OPENER = urllib.request.build_opener(
+    urllib.request.ProxyHandler({}), _SafeHTTPHandler(), _SafeHTTPSHandler(),
+    _SafeRedirectHandler())
+
+
 def _http_get(url, headers, timeout=30):
+    _validate_remote_url(url)
     req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read(), (r.headers.get_content_type() or "").lower()
+    with _SAFE_OPENER.open(req, timeout=timeout) as r:
+        raw = r.read(MAX_FETCH_BYTES + 1)
+        if len(raw) > MAX_FETCH_BYTES:
+            raise ValueError("remote response too large (limit {} bytes)".format(MAX_FETCH_BYTES))
+        return raw, (r.headers.get_content_type() or "").lower()
 
 
 def _reader_proxy(target):
@@ -50,7 +161,7 @@ def _reader_proxy(target):
         raw, _ = _http_get("https://r.jina.ai/" + target,
                            {"User-Agent": "epistemic-ingest/1.0", "Accept": "text/plain"},
                            timeout=45)
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError):
         return None
     return raw.decode("utf-8", "ignore")
 
@@ -114,6 +225,60 @@ def _doi_from(url):
 def _arxiv_from(url):
     m = re.search(r"arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})", url, re.I)
     return m.group(1) if m else None
+
+
+def _pmcid_from(url):
+    m = re.search(r"PMC\d{4,}", url, re.I)
+    return m.group(0).upper() if m else None
+
+
+def _epmc_fulltext(target):
+    """FULL article body via Europe PMC's fullTextXML — the methods, results, conclusions, and
+    funding/COI statement, not just the abstract. Covers most open-access biomedical papers (PMC &
+    co.), which is where abstract-only labelling produced boilerplate 'quotes'. Returns a doc/None.
+    Set EPISTEMIC_ABSTRACT_ONLY=1 to skip."""
+    if os.environ.get("EPISTEMIC_ABSTRACT_ONLY"):
+        return None
+    doi, pmid, pmcid = _doi_from(target), _pmid_from(target), _pmcid_from(target)
+    if pmcid:
+        q = "PMCID:%s" % pmcid
+    elif doi:
+        q = 'DOI:"%s"' % doi
+    elif pmid:
+        q = "EXT_ID:%s AND SRC:MED" % pmid
+    else:
+        return None
+    base = "https://www.ebi.ac.uk/europepmc/webservices/rest"
+    ua = {"User-Agent": "epistemic-ingest/1.0"}
+    try:
+        raw, _ = _http_get(base + "/search?query=" + urllib.parse.quote(q) +
+                           "&format=json&resultType=core&pageSize=1", ua, timeout=30)
+        res = (json.loads(raw).get("resultList") or {}).get("result") or []
+    except Exception:
+        return None
+    if not res:
+        return None
+    r = res[0]
+    epmc_id = r.get("pmcid")                       # full text is keyed on the PMC id
+    if r.get("inEPMC") != "Y" or not epmc_id:      # no open-access full text on file
+        return None
+    try:
+        xml, _ = _http_get("{}/PMC/{}/fullTextXML".format(base, epmc_id), ua, timeout=45)
+    except Exception:
+        return None
+    body = _strip_html(xml.decode("utf-8", "ignore"))
+    if len(body) < 800:                            # didn't really get the body
+        return None
+    title = re.sub(r"\s+", " ", (r.get("title") or doi or pmid or "")).strip()
+    authors = [a.strip() for a in re.split(r"[;,]", r.get("authorString") or "") if a.strip()]
+    jnl = (r.get("journalInfo") or {}).get("journal", {}).get("title") or ""
+    head = title
+    if authors:
+        head += "\n\nAuthors: " + ", ".join(authors[:8])
+    if jnl:
+        head += "\nJournal: {} ({})".format(jnl, r.get("pubYear", ""))
+    return {"text": (head + "\n\n--- full text ---\n" + body)[:MAX_CHARS], "title": title,
+            "url": target, "authors": authors, "venue": jnl}
 
 
 def _pmid_from(url):
@@ -214,7 +379,7 @@ def _pdf_text(url):
         raw, ctype = _http_get(url, {"User-Agent": (
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")}, timeout=45)
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError):
         return None
     if not (raw[:5] == b"%PDF-" or "pdf" in ctype):     # a landing page / paywall, not a PDF
         return None
@@ -336,7 +501,7 @@ def _arxiv(target):
 
 
 _API_LABELS = {"_semantic_scholar": "Semantic Scholar", "_openalex": "OpenAlex",
-               "_europepmc": "Europe PMC", "_arxiv": "arXiv"}
+               "_europepmc": "Europe PMC", "_arxiv": "arXiv", "_epmc_fulltext": "Europe PMC full text"}
 
 
 def _crossref_funders(doi):
@@ -375,10 +540,10 @@ def _academic(target):
     enriched with Crossref funders when its abstract carries no funding statement."""
     if os.environ.get("EPISTEMIC_NO_API"):
         return None, None
-    # OpenAlex first: reliable on the polite pool (mailto), and adds funders. arXiv API for
-    # preprints (often DOI-less). Semantic Scholar next (broad, but keyless pool is throttled).
-    # Europe PMC last (biomedical, abstract-only).
-    for fn in (_openalex, _arxiv, _semantic_scholar, _europepmc):
+    # Europe PMC FULL TEXT first when the article is open-access (the real body, not an abstract).
+    # Then OpenAlex (also tries an OA PDF, and adds funders), arXiv for preprints, Semantic Scholar,
+    # and Europe PMC abstract as the last resort.
+    for fn in (_epmc_fulltext, _openalex, _arxiv, _semantic_scholar, _europepmc):
         doc = fn(target)
         if doc:
             return _enrich_funding(doc, target), _API_LABELS.get(fn.__name__, fn.__name__)
@@ -424,8 +589,12 @@ def clean_url(u):
     return m.group(0) if m else u
 
 
-def extract_text(target):
-    """target = http(s) URL or a local file path. Returns {text, title, url}."""
+def extract_text(target, allow_local=True):
+    """target = http(s) URL or a local file path. Returns {text, title, url}.
+
+    The CLI may ingest local files, but hosted/public fetch routes must pass
+    allow_local=False so untrusted users cannot ask the server to read its filesystem.
+    """
     target = clean_url(target)
     if re.match(r"^https?://", target, re.I):
         # Academic link? Resolve it through a structured scholarly API first — this returns a
@@ -448,6 +617,8 @@ def extract_text(target):
             if e.code in BLOCK_CODES:
                 return _fallback(target)            # 403/429 etc. → proxy, then Europe PMC
             raise SystemExit("could not fetch {} ({})".format(target, e))
+        except ValueError as e:
+            raise SystemExit(str(e))
         except urllib.error.URLError:
             return _fallback(target)                # SSL/connection error
         if target.lower().endswith(".pdf") or ctype == "application/pdf":
@@ -457,6 +628,9 @@ def extract_text(target):
         if _looks_blocked(text, title):            # 200 OK but it's a Cloudflare interstitial
             return _fallback(target)
         return {"text": text, "title": title, "url": target}
+
+    if not allow_local:
+        raise SystemExit("only absolute http(s) URLs can be fetched here")
 
     ext = os.path.splitext(target)[1].lower()
     if ext == ".pdf":

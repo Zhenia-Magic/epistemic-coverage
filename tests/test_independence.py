@@ -208,3 +208,29 @@ class BudgetAndFundingTests(unittest.TestCase):
         llm._record_usage("claude-sonnet-4-6", {"usage": {"input_tokens": 1_000_000, "output_tokens": 0}})
         self.assertAlmostEqual(llm.usage()["usd"], 3.0, places=4)   # $3 / 1M input on sonnet
         self.assertEqual(llm.usage()["calls"], 1)
+
+
+class DedupTests(unittest.TestCase):
+    def test_same_paper_two_urls_is_a_duplicate(self):
+        from engine.schema import empty_kb
+        from engine.merge import merge_delta
+        kb = empty_kb("t", "Q?")
+        merge_delta(kb, {"source": {"title": "Alcohol and CVD", "year": 2020,
+                                    "url": "https://doi.org/10.1161/X", "position": "NEW:Decreases",
+                                    "evidence": "Observational", "relevant": True}})
+        rep = merge_delta(kb, {"source": {"title": "Alcohol and CVD: the full subtitle", "year": 2020,
+                                          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC1/?doi=10.1161/X",
+                                          "position": "Decreases", "evidence": "Observational", "relevant": True}})
+        self.assertTrue(rep.get("duplicate"))
+        self.assertEqual(len(kb["sources"]), 1)
+
+    def test_dedupe_sources_removes_title_truncation_dups(self):
+        from engine import curate
+        kb = _kb([_s("a", "X", "Observational", ["D1"]),
+                  _s("b", "X", "Observational", ["D2"])])
+        kb["sources"][0].update(title="Alcohol consumption and cardiovascular disease", year=2017)
+        kb["sources"][1].update(title="Alcohol consumption and cardiovascular disease: an update", year=2017)
+        kb["meta"] = {"version": 1}
+        rep = curate.dedupe_sources(kb)
+        self.assertEqual(len(rep["removed"]), 1)
+        self.assertEqual(len(kb["sources"]), 1)

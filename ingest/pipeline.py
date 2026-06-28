@@ -39,11 +39,13 @@ _SRC_HINT = ('SOURCES ALREADY IN THE KB — if THIS source\'s evidence IS one of
              'inventing a dataset. That is how echo and circular citation get caught:')
 
 _RULES = """Rules (apply to each source):
-- relevance FIRST: does this source actually bear on THE QUESTION? If it is about a different
-  topic (it neither studies the question's subject nor argues a stance on it), set
-  "relevant": false and give a one-line "offTopicReason" — and do NOT invent a position, datasets,
-  or factors for it. Only label sources that genuinely speak to the question. When in doubt and
-  the source is clearly on-topic, set "relevant": true.
+- relevance FIRST: does this source actually bear on THE QUESTION — its specific EXPOSURE *and*
+  its specific OUTCOME? Match BOTH. A source on a different OUTCOME is off-topic even if the exposure
+  is right: for "…reduce CARDIOVASCULAR risk?", a study reporting only ALL-CAUSE MORTALITY, cancer,
+  a different disease, or heavy-use harm (e.g. alcoholic cardiomyopathy) does NOT address the
+  cardiovascular question unless it directly reports cardiovascular outcomes. If it is off-topic,
+  set "relevant": false with a one-line "offTopicReason" and do NOT invent a position, datasets, or
+  factors. Only label sources that speak to the question's exposure AND outcome.
 - position: the single DIRECTIONAL stance the source takes ON THE QUESTION — an actual answer to it
   (e.g. increases / decreases / no clear effect / it depends). REUSE an existing position whenever
   the source argues a stance already listed, even if worded differently. "NEW:<label>" only for a
@@ -83,11 +85,14 @@ _RULES = """Rules (apply to each source):
   whole point of the population tag for a clinical question.
 - confidence: the source's OWN stated strength (high/moderate/low/unstated).
 - provenance: for position and restsOn, quote ONE COMPLETE verbatim sentence from the text that
-  states the actual finding/stance (the direction of the association or the conclusion) +
+  states the actual FINDING/stance (the direction of the association or the conclusion) +
   extractionConfidence [0,1]. The quote MUST be a whole sentence, not cut off mid-clause (never
-  end on "associated with", "compared to", etc.). NEVER use the paper's title, a heading, or the
-  search snippet as the quote. If only the title/abstract is available and no sentence states the
-  finding, quote the closest complete statement and set extractionConfidence ≤ 0.4 — never the title.
+  end on "associated with", "compared to", etc.). NEVER quote the paper's title, a heading, the
+  search snippet, or a METADATA / BOILERPLATE line — publication dates ("Accepted for Publication:
+  …"), author lists, "a literature search was conducted from …", "this review summarises …" — these
+  state no finding. If the fetched text genuinely contains no sentence stating the finding (e.g. only
+  metadata came through), set extractionConfidence ≤ 0.3 and quote the closest real statement, or
+  leave the quote empty — never pad it with boilerplate.
 - factorWeights: a factor is a DIMENSION THE CAMPS DISAGREE ON (a crux) — e.g. "weight given to
   industry funding", "how much to discount observational confounding", "biomarkers vs hard
   outcomes". It is NOT a study parameter, subgroup, measured outcome, or topic (gestational age,
@@ -425,14 +430,14 @@ def discover(question, k=8, dry_run=False, source="web", deep=False, exclude=Non
     return out
 
 
-def fetch_docs(targets):
+def fetch_docs(targets, allow_local=True):
     """Fetch real text for each URL/path (urllib + reader-proxy fallback in extract.py).
     Returns (docs, skipped) — skipped lists what couldn't be fetched, so the caller can report
     it honestly rather than letting the model guess at unreachable content."""
     docs, skipped = [], []
     for t in targets:
         try:
-            docs.append(extract_text(t))
+            docs.append(extract_text(t, allow_local=allow_local))
         except (SystemExit, Exception) as e:  # block, SSL, 404, bad path, missing dep — all skippable
             skipped.append({"target": t, "error": str(e)})
     return docs, skipped

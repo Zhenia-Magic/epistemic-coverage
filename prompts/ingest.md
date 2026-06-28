@@ -74,12 +74,18 @@ multiplying via paraphrase as a case grows):
   non-human study say so: "Mice" / "Rats" / "Animal model" / "In vitro / cell" — never let an
   animal or cell study look like human evidence.
 - confidence: the source's OWN stated strength (high/moderate/low/unstated), not yours.
+- relevance: the source must match the question's EXPOSURE *and* its specific OUTCOME. A study on a
+  different outcome (e.g. all-cause mortality when the question asks about cardiovascular disease) or
+  on heavy-use harm is off-topic unless it directly reports the question's outcome — mark such a
+  source relevant:false rather than forcing it into a position.
 - provenance: for position and restsOn, quote ONE COMPLETE verbatim sentence that states the
-  actual finding/stance (direction of the association or the conclusion) + extractionConfidence
+  actual FINDING/stance (direction of the association or the conclusion) + extractionConfidence
   [0,1]. The quote MUST be a whole sentence, not cut off mid-clause (never end on "associated
-  with", "compared to", …). NEVER use the paper's title, a heading, or the search snippet. If only
-  the title/abstract is available and no sentence states the finding, quote the closest complete
-  statement and set extractionConfidence ≤ 0.4 — never the title.
+  with", "compared to", …). NEVER quote the title, a heading, the search snippet, or a METADATA /
+  BOILERPLATE line (publication dates, "Accepted for Publication: …", author lists, "a literature
+  search was conducted from …"). If the text has no sentence stating the finding, set
+  extractionConfidence ≤ 0.3 and quote the closest real statement, or leave the quote empty — never
+  pad it with boilerplate.
 - factorWeights: a factor is a DIMENSION THE CAMPS DISAGREE ON (a crux), e.g. "weight given to
   industry funding", "biomarkers vs hard outcomes" — NOT a study parameter / subgroup / outcome
   (gestational age, parity, dose, cesarean rate: those describe a study, skip them). Name the
