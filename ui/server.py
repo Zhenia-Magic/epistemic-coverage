@@ -476,12 +476,13 @@ def gaps_search_op(cid, queries, source="web", deep=False, k=6):
     return {"candidates": out}
 
 
-def thorough_deepen_op(cid, budget, source="web", deep=False, per=6, width=4):
-    """Autonomous budget-bounded harvest. Each round searches the QUESTION broadly AND the worst
-    gaps, fetches + labels everything new, and repeats — until ~$budget (estimated) is spent or a
-    whole round adds nothing new (true saturation). Re-searching a gap is allowed: the exclude-list
-    grows each round, so the same query keeps surfacing DIFFERENT new sources until exhausted. Every
-    search is isolated, so one slow/failed call can't stall the run. Streams to the progress log."""
+def thorough_deepen_op(cid, budget, source="web", deep=False, mode="gaps", per=6, width=4):
+    """Autonomous budget-bounded search until ~$budget (estimated) is spent or a whole round adds
+    nothing new (saturation). Two modes:
+      mode="gaps"  — each round searches the worst GAPS (re-searching allowed; the exclude-list
+                     grows so the same query keeps surfacing new sources until exhausted).
+      mode="broad" — each round runs one wide search of the QUESTION itself ("do it all" harvest).
+    Every search is isolated, so one slow/failed call can't stall the run. Streams to the log."""
     from engine.gaps import find_gaps, gap_queries
     from ingest.pipeline import discover
     from engine.merge import source_key
@@ -491,9 +492,10 @@ def thorough_deepen_op(cid, budget, source="web", deep=False, per=6, width=4):
     budget = float(budget or 0)
     if budget <= 0:
         raise ValueError("Set a budget (e.g. 3 for ~$3).")
+    mode = "broad" if str(mode).lower() == "broad" else "gaps"
     question = _read(_case_path(cid))["meta"]["question"]
     llm.reset_usage()
-    log("=== Thorough harvest — budget ~${:.2f} ===".format(budget))
+    log("=== Thorough {} search — budget ~${:.2f} ===".format(mode, budget))
     total_added, rnd = 0, 0
     while rnd < 100:
         if llm.usage()["usd"] >= budget:
@@ -503,19 +505,21 @@ def thorough_deepen_op(cid, budget, source="web", deep=False, per=6, width=4):
         kb = _read(_case_path(cid))
         have = [s.get("title") for s in kb["sources"] if s.get("title")]
         existing = {source_key(s) for s in kb["sources"]}
-        # broad harvest of the question itself + the worst gaps (deduped by query text this round)
-        queries, seen_q = [{"q": question, "tag": "broad"}], {question.lower()}
-        for g in gap_queries(kb, find_gaps(kb))[:width]:
-            if g["query"].lower() not in seen_q:
-                seen_q.add(g["query"].lower())
-                queries.append({"q": g["query"], "tag": g["gap"]["kind"]})
+        if mode == "broad":
+            queries = [{"q": question, "tag": "broad", "k": max(per, 15)}]   # one wide sweep / round
+        else:
+            gq = gap_queries(kb, find_gaps(kb))
+            if not gq:
+                log("no gaps left — every position rests on independent primary evidence.")
+                break
+            queries = [{"q": g["query"], "tag": g["gap"]["kind"], "k": per} for g in gq[:width]]
         urls = []
         for item in queries:
             if llm.usage()["usd"] >= budget:
                 break
             log("round {} · search [{}]: {}".format(rnd, item["tag"], item["q"][:56]))
             try:
-                cands = discover(item["q"], k=per, source=source, deep=deep, exclude=have) or []
+                cands = discover(item["q"], k=item["k"], source=source, deep=deep, exclude=have) or []
             except Exception as e:                       # one bad/slow search must not stall the run
                 log("  search failed, skipping: {}".format(str(e)[:80]))
                 continue
@@ -639,7 +643,8 @@ class Handler(BaseHTTPRequestHandler):
                                                       body.get("k", 6)))
             if self.path == "/api/gaps/thorough":
                 return self._send(200, thorough_deepen_op(body.get("id"), body.get("budget"),
-                                                          body.get("source", "web"), body.get("deep", False)))
+                                                          body.get("source", "web"), body.get("deep", False),
+                                                          body.get("mode", "gaps")))
             if self.path == "/api/add":
                 return self._send(200, add_payload(body.get("id"), body.get("text") or ""))
             if self.path == "/api/entities":

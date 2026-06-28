@@ -590,11 +590,16 @@ def cmd_deepen(args):
             print("\nBudget reached (~${:.2f}). Stopping.".format(llm.usage()["usd"]))
             break
         gaps = gap_queries(read_json(args.kb), find_gaps(read_json(args.kb)))
-        if budget:
-            # autonomous: search the QUESTION broadly + the worst gaps; re-search is allowed
-            # (the exclude-list grows, so each pass finds new sources until saturation).
+        if budget and getattr(args, "broad", False):
+            # broad mode: one wide sweep of the QUESTION per round (re-search; exclude grows).
             question = read_json(args.kb)["meta"]["question"]
-            batch_q = [{"query": question, "gap": {"kind": "broad"}}] + gaps[:args.width]
+            batch_q = [{"query": question, "gap": {"kind": "broad"}}]
+        elif budget:
+            # gaps mode: search the worst gaps; re-search is allowed (exclude grows each round).
+            if not gaps:
+                print("No gaps left — every position rests on independent primary evidence.")
+                break
+            batch_q = gaps[:args.width]
         else:
             if not gaps:
                 print("No gaps left — every position rests on independent primary evidence.")
@@ -619,8 +624,9 @@ def cmd_deepen(args):
             if budget and llm.usage()["usd"] >= budget:
                 break
             print("  search [{}]: {}".format(q["gap"]["kind"], q["query"][:68]))
+            qk = max(args.per, 15) if q["gap"]["kind"] == "broad" else args.per  # wider for broad
             try:
-                cands = discover(q["query"], k=args.per, source=args.source, deep=False,
+                cands = discover(q["query"], k=qk, source=args.source, deep=False,
                                  exclude=have) or []
             except Exception as e:               # one bad/slow search must not stall the run
                 print("    search failed, skipping: {}".format(str(e)[:80]))
@@ -675,7 +681,9 @@ def main():
     s.add_argument("--per", type=int, default=6, help="candidates fetched per gap search")
     s.add_argument("--source", choices=["api", "web", "both"], default="web")
     s.add_argument("--budget", type=float,
-                   help="THOROUGH mode: keep going until ~$N (estimated) is spent or gaps run dry")
+                   help="THOROUGH mode: keep going until ~$N (estimated) is spent or it saturates")
+    s.add_argument("--broad", action="store_true",
+                   help="with --budget: wide-harvest the QUESTION instead of searching gaps")
     s.add_argument("--all", action="store_true", help="pursue all thin spots without prompting")
     s.add_argument("--batch", type=int, default=5)
     s.add_argument("--max-text", dest="max_text", type=int, default=4000)
