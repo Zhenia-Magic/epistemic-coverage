@@ -476,6 +476,67 @@ def gaps_search_op(cid, queries, source="web", deep=False, k=6):
     return {"candidates": out}
 
 
+def thorough_deepen_op(cid, budget, source="web", deep=False, per=6, width=4):
+    """Autonomous gap-driven deep search, bounded by an estimated USD budget. Runs find-gaps →
+    search → fetch+label+merge → re-check until ~$budget is spent or the gaps run dry. Logs to the
+    progress feed so the console can stream it; returns a spend + coverage summary."""
+    from engine.gaps import find_gaps, gap_queries
+    from ingest.pipeline import discover
+    from engine.merge import source_key
+    from ingest import llm
+    if not has_key():
+        raise ValueError("Thorough mode needs an API key (it searches + labels for you).")
+    budget = float(budget or 0)
+    if budget <= 0:
+        raise ValueError("Set a budget (e.g. 3 for ~$3).")
+    llm.reset_usage()
+    log("=== Thorough deepen — budget ~${:.2f} ===".format(budget))
+    tried, total_added, rnd = set(), 0, 0
+    while rnd < 100:
+        spent = llm.usage()["usd"]
+        if spent >= budget:
+            log("budget reached (~${:.2f}) — stopping.".format(spent))
+            break
+        rnd += 1
+        kb = _read(_case_path(cid))
+        gaps = gap_queries(kb, find_gaps(kb))
+        if not gaps:
+            log("no gaps left — every position rests on independent primary evidence.")
+            break
+        batch = [g for g in gaps if g["query"].lower() not in tried][:width]
+        if not batch:
+            log("all current gaps already tried — {} remain, need fresh angles.".format(len(gaps)))
+            break
+        for g in batch:
+            tried.add(g["query"].lower())
+        have = [s.get("title") for s in kb["sources"] if s.get("title")]
+        existing = {source_key(s) for s in kb["sources"]}
+        urls = []
+        for g in batch:
+            log("round {} · search [{}]: {}".format(rnd, g["gap"]["kind"], g["query"][:58]))
+            for c in discover(g["query"], k=per, source=source, deep=deep, exclude=have) or []:
+                u = c.get("url")
+                if u and source_key({"url": u}) not in existing:
+                    existing.add(source_key({"url": u})); urls.append(u)
+        if not urls:
+            log("no new candidates this round — stopping.")
+            break
+        log("round {} · fetching + labelling {} new candidate(s)…".format(rnd, len(urls)))
+        res = extract_op(cid, urls, apply=True, batch=8)
+        added = sum(1 for r in res.get("results", []) if r.get("status") == "added")
+        total_added += added
+        log("round {} · +{} source(s); ~${:.2f} spent.".format(rnd, added, llm.usage()["usd"]))
+        if added == 0:
+            log("nothing merged this round — stopping (diminishing returns).")
+            break
+    remaining = len(find_gaps(_read(_case_path(cid))))
+    u = llm.usage()
+    log("=== thorough done: +{} source(s), ~${:.2f} over {} call(s), {} gap(s) left ===".format(
+        total_added, u["usd"], u["calls"], remaining))
+    return {"added": total_added, "rounds": rnd, "spentUsd": round(u["usd"], 2),
+            "calls": u["calls"], "gapsRemaining": remaining}
+
+
 def portal_push_op(url, cid):
     """Push a local case to the portal — create if it has no lineage, else version-checked update."""
     from app import client
@@ -567,6 +628,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, gaps_search_op(body.get("id"), body.get("queries"),
                                                       body.get("source", "web"), body.get("deep", False),
                                                       body.get("k", 6)))
+            if self.path == "/api/gaps/thorough":
+                return self._send(200, thorough_deepen_op(body.get("id"), body.get("budget"),
+                                                          body.get("source", "web"), body.get("deep", False)))
             if self.path == "/api/add":
                 return self._send(200, add_payload(body.get("id"), body.get("text") or ""))
             if self.path == "/api/entities":

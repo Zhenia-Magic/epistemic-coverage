@@ -230,6 +230,11 @@
         <option value="api">Papers · OpenAlex only</option></select></div>
       <button id="gapsSearchBtn" disabled>Search selected gaps →</button>
     </div>
+    <div class="row" style="margin-top:6px;align-items:end">
+      <div class="narrow"><label for="gapsBudget">Budget $</label><input id="gapsBudget" type="number" value="3" min="0.5" step="0.5"></div>
+      <button id="gapsThoroughBtn" title="Autonomously search every gap until the budget is spent">⚡ Run thorough ($)</button>
+      <span class="hint" style="flex:1;min-width:120px">Searches all gaps, fetches & labels, until ~$budget (estimated) is spent.</span>
+    </div>
     <div class="toast" id="gapsToast"></div>
     <div id="gapsList" class="results"></div>
   </div>
@@ -435,6 +440,20 @@ $("#gapsBtn").addEventListener("click",()=>{if(!need())return;busy($("#gapsBtn")
     toast($("#gapsToast"),GAPS.length?`${GAPS.length} thin spot(s) — tick the ones to pursue, then search.`:"Looking solid — every position rests on independent primary evidence.",GAPS.length?"warn":"ok");
   }catch(e){gapsErr(e);}
 },"Reading…");});
+$("#gapsThoroughBtn").addEventListener("click",()=>{if(!need())return;
+  if(!isAuto()){toast($("#gapsToast"),"Thorough mode needs an API key (set one above).","warn");return;}
+  const budget=parseFloat($("#gapsBudget").value)||0;
+  if(budget<=0){toast($("#gapsToast"),"Set a budget (e.g. 3).","warn");return;}
+  if(!confirm("Run thorough search until ~$"+budget.toFixed(2)+" is spent? This searches, fetches and labels autonomously."))return;
+  busy($("#gapsThoroughBtn"),async()=>{
+    toast($("#gapsToast"),"Thorough search running — watch the log…","warn");
+    try{
+      const r=await api("/api/gaps/thorough",{id:caseId(),budget,source:$("#gapsSource").value});
+      await loadCases(caseId());await api("/api/build",{});
+      toast($("#gapsToast"),`Done: +${r.added} source(s), ~$${(r.spentUsd||0).toFixed(2)} spent, ${r.gapsRemaining} gap(s) left.`,"ok");
+      GAPS=[];renderGaps();
+    }catch(e){gapsErr(e);}
+  },"Running…",true);});
 $("#gapsSearchBtn").addEventListener("click",()=>{if(!need())return;busy($("#gapsSearchBtn"),async()=>{
   const queries=[...document.querySelectorAll(".gapck")].filter(c=>c.checked).map(c=>GAPS[+c.dataset.i].query);
   if(!queries.length){toast($("#gapsToast"),"Select at least one gap.","warn");return;}
