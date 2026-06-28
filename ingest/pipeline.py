@@ -26,8 +26,10 @@ _DS_HINT = ('EXISTING DATASETS — the underlying PRIMARY cohorts / trials / bio
             'id when the source\'s data is one of these (a shared cohort under a new name '
             'defeats the independence audit). A review/meta-analysis rests on the cohorts it '
             'POOLS — never on "the literature":')
-_FAC_HINT = ('EXISTING FACTORS — reference by EXACT label; add a new factor only for a genuinely '
-             'new dimension (do not restate an existing one in new words):')
+_FAC_HINT = ('EXISTING FACTORS — the CONTESTED DIMENSIONS camps weigh differently (cruxes). '
+             'Reference by EXACT label whenever this source bears on one; add a new factor only for '
+             'a genuinely new AXIS OF DISAGREEMENT — never a study parameter, a value (e.g. "39 '
+             'weeks"), or a re-wording of an existing factor:')
 _EV_HINT = 'EVIDENCE TYPES in use (choose the closest; "NEW:<label>" only if none fit):'
 _POP_HINT = ('POPULATIONS in use — the studied GROUP (region / menopausal status / age, or '
              '"Mice" / "Rats" / "In vitro" for non-human studies), NOT the study design. Reuse a '
@@ -55,6 +57,11 @@ _RULES = """Rules (apply to each source):
   "no clear effect / it depends" camp if it takes no directional stance on the question — and record
   the specific mechanism / biomarker / subgroup / framing angle as a factorWeight. Do NOT mint a new
   position camp for it.
+  ONE camp per direction: do not split a stance into several positions by its CONDITIONS (e.g. two
+  "conditionally safe" camps — one for scar status, one for elective timing). Use a SINGLE "it
+  depends / conditionally" position and capture each differing condition as a FACTOR. If a new
+  position label would share its stance word with an existing one (both "safe", both "increases"),
+  reuse that position instead.
 - restsOn: the underlying PRIMARY evidence — named cohorts, trials, or biobanks (e.g. Nurses'
   Health Study, EPIC, a specific RCT). A review or meta-analysis restsOn the cohorts/trials it
   POOLS — NOT "the literature", "studies through <year>", or a label that just describes this
@@ -81,9 +88,16 @@ _RULES = """Rules (apply to each source):
   end on "associated with", "compared to", etc.). NEVER use the paper's title, a heading, or the
   search snippet as the quote. If only the title/abstract is available and no sentence states the
   finding, quote the closest complete statement and set extractionConfidence ≤ 0.4 — never the title.
-- factorWeights: reuse a factor label VERBATIM (new only for a genuinely new dimension); for each
-  factor the source bears on, how strongly its POSITION weights it (high/med/low) + quote +
-  one-line rationale.
+- factorWeights: a factor is a DIMENSION THE CAMPS DISAGREE ON (a crux) — e.g. "weight given to
+  industry funding", "how much to discount observational confounding", "biomarkers vs hard
+  outcomes". It is NOT a study parameter, subgroup, measured outcome, or topic (gestational age,
+  parity, sample size, cesarean rate, dose: those DESCRIBE a study, they are not where camps
+  disagree — skip them). Name the DIMENSION, never a specific value: "Gestational age at induction",
+  NOT "...(39 weeks)" — the number belongs in the quote. REUSE an existing factor label VERBATIM
+  whenever this source bears on it; add a new factor only for a genuinely new AXIS OF DISAGREEMENT.
+  Litmus: a real factor is one MORE THAN ONE camp would weigh (differently) — if only one side
+  could ever engage it, it's a descriptive tag, not a crux, so don't add it. For each factor the
+  source bears on: how strongly its POSITION weights it (high/med/low) + quote + one-line rationale.
 - Do NOT fabricate. If the text doesn't support a field, omit it or mark low confidence."""
 
 _SCHEMA = ('{"source":{"title":"...","year":2020,"url":"...",\n'

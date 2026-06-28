@@ -54,6 +54,9 @@ multiplying via paraphrase as a case grows):
   subgroup/susceptibility factor (diabetics, a gene variant), or a framing/funding point are all
   FACTORS — assign the closest existing position the source's direction supports (or the neutral
   "no clear effect / it depends" camp) and record the specifics as a factorWeight; never a new camp.
+  Don't split one stance into several positions by its CONDITIONS (e.g. two "conditionally safe"
+  camps) — use ONE "it depends" position and make each condition a FACTOR. If a new label would
+  share its stance word with an existing position, reuse that position.
 - restsOn: the underlying PRIMARY evidence — named cohorts / trials / biobanks. A review or
   meta-analysis restsOn the cohorts it POOLS, NOT "the literature" / "studies through <year>" /
   a label describing the paper itself. Same cohort across sources => SAME label. If the cohorts
@@ -77,8 +80,13 @@ multiplying via paraphrase as a case grows):
   with", "compared to", …). NEVER use the paper's title, a heading, or the search snippet. If only
   the title/abstract is available and no sentence states the finding, quote the closest complete
   statement and set extractionConfidence ≤ 0.4 — never the title.
-- factorWeights: reuse a factor label VERBATIM (new only for a new dimension); for each factor
-  the source bears on, how strongly its POSITION weights it (high/med/low) + quote + rationale.
+- factorWeights: a factor is a DIMENSION THE CAMPS DISAGREE ON (a crux), e.g. "weight given to
+  industry funding", "biomarkers vs hard outcomes" — NOT a study parameter / subgroup / outcome
+  (gestational age, parity, dose, cesarean rate: those describe a study, skip them). Name the
+  DIMENSION, never a value ("Gestational age at induction", not "(39 weeks)" — the number goes in
+  the quote). REUSE an existing factor label VERBATIM; a real factor is one MORE THAN ONE camp
+  weighs — if only one side could engage it, it's a descriptive tag, not a crux. For each: how
+  strongly its POSITION weights it (high/med/low) + quote + rationale.
 - Do NOT fabricate. If the text doesn't support a field, omit it or mark low confidence.
 ````
 
