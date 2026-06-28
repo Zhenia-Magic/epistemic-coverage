@@ -590,34 +590,47 @@ def cmd_deepen(args):
             print("\nBudget reached (~${:.2f}). Stopping.".format(llm.usage()["usd"]))
             break
         gaps = gap_queries(read_json(args.kb), find_gaps(read_json(args.kb)))
-        if not gaps:
-            print("No gaps left — every position rests on independent primary evidence.")
-            break
-        interactive = sys.stdin.isatty() and not args.all and not budget
-        batch_q = _choose_gaps(gaps, tried, args.width, interactive)
-        if batch_q is None:                  # user chose to quit
-            print("Stopped at your request.")
-            break
-        if not batch_q:
-            print("Round {}: every current gap-query already tried; {} gap(s) remain but need "
-                  "fresh search angles (try --source both).".format(rnd, len(gaps)))
-            break
-        for q in batch_q:
-            tried.add(q["query"].lower())
-        print("\n=== Round {} — targeting {} thin spot(s) ===".format(rnd, len(batch_q)))
+        if budget:
+            # autonomous: search the QUESTION broadly + the worst gaps; re-search is allowed
+            # (the exclude-list grows, so each pass finds new sources until saturation).
+            question = read_json(args.kb)["meta"]["question"]
+            batch_q = [{"query": question, "gap": {"kind": "broad"}}] + gaps[:args.width]
+        else:
+            if not gaps:
+                print("No gaps left — every position rests on independent primary evidence.")
+                break
+            interactive = sys.stdin.isatty() and not args.all
+            batch_q = _choose_gaps(gaps, tried, args.width, interactive)
+            if batch_q is None:                  # user chose to quit
+                print("Stopped at your request.")
+                break
+            if not batch_q:
+                print("Round {}: every current gap-query already tried; {} gap(s) remain but need "
+                      "fresh search angles (try --source both).".format(rnd, len(gaps)))
+                break
+            for q in batch_q:
+                tried.add(q["query"].lower())
+        print("\n=== Round {} — {} search(es) ===".format(rnd, len(batch_q)))
         kb_now = read_json(args.kb)
         existing = {source_key(s) for s in kb_now["sources"]}
         have = [s.get("title") for s in kb_now["sources"] if s.get("title")]
         urls = []
         for q in batch_q:
+            if budget and llm.usage()["usd"] >= budget:
+                break
             print("  search [{}]: {}".format(q["gap"]["kind"], q["query"][:68]))
-            for it in discover(q["query"], k=args.per, source=args.source, deep=False,
-                               exclude=have) or []:
+            try:
+                cands = discover(q["query"], k=args.per, source=args.source, deep=False,
+                                 exclude=have) or []
+            except Exception as e:               # one bad/slow search must not stall the run
+                print("    search failed, skipping: {}".format(str(e)[:80]))
+                continue
+            for it in cands:
                 u = it.get("url")
                 if u and source_key({"url": u}) not in existing:
                     existing.add(source_key({"url": u})); urls.append(u)
         if not urls:
-            print("  no NEW candidates this round — {} gap(s) still open.".format(len(gaps)))
+            print("  no NEW candidates this round — saturated.")
             break
         print("  ingesting {} new candidate(s)…".format(len(urls)))
         added = _merge_deltas(args.kb, ingest_batch(urls, read_json(args.kb),

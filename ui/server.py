@@ -477,9 +477,11 @@ def gaps_search_op(cid, queries, source="web", deep=False, k=6):
 
 
 def thorough_deepen_op(cid, budget, source="web", deep=False, per=6, width=4):
-    """Autonomous gap-driven deep search, bounded by an estimated USD budget. Runs find-gaps →
-    search → fetch+label+merge → re-check until ~$budget is spent or the gaps run dry. Logs to the
-    progress feed so the console can stream it; returns a spend + coverage summary."""
+    """Autonomous budget-bounded harvest. Each round searches the QUESTION broadly AND the worst
+    gaps, fetches + labels everything new, and repeats — until ~$budget (estimated) is spent or a
+    whole round adds nothing new (true saturation). Re-searching a gap is allowed: the exclude-list
+    grows each round, so the same query keeps surfacing DIFFERENT new sources until exhausted. Every
+    search is isolated, so one slow/failed call can't stall the run. Streams to the progress log."""
     from engine.gaps import find_gaps, gap_queries
     from ingest.pipeline import discover
     from engine.merge import source_key
@@ -489,45 +491,52 @@ def thorough_deepen_op(cid, budget, source="web", deep=False, per=6, width=4):
     budget = float(budget or 0)
     if budget <= 0:
         raise ValueError("Set a budget (e.g. 3 for ~$3).")
+    question = _read(_case_path(cid))["meta"]["question"]
     llm.reset_usage()
-    log("=== Thorough deepen — budget ~${:.2f} ===".format(budget))
-    tried, total_added, rnd = set(), 0, 0
+    log("=== Thorough harvest — budget ~${:.2f} ===".format(budget))
+    total_added, rnd = 0, 0
     while rnd < 100:
-        spent = llm.usage()["usd"]
-        if spent >= budget:
-            log("budget reached (~${:.2f}) — stopping.".format(spent))
+        if llm.usage()["usd"] >= budget:
+            log("budget reached (~${:.2f}) — stopping.".format(llm.usage()["usd"]))
             break
         rnd += 1
         kb = _read(_case_path(cid))
-        gaps = gap_queries(kb, find_gaps(kb))
-        if not gaps:
-            log("no gaps left — every position rests on independent primary evidence.")
-            break
-        batch = [g for g in gaps if g["query"].lower() not in tried][:width]
-        if not batch:
-            log("all current gaps already tried — {} remain, need fresh angles.".format(len(gaps)))
-            break
-        for g in batch:
-            tried.add(g["query"].lower())
         have = [s.get("title") for s in kb["sources"] if s.get("title")]
         existing = {source_key(s) for s in kb["sources"]}
+        # broad harvest of the question itself + the worst gaps (deduped by query text this round)
+        queries, seen_q = [{"q": question, "tag": "broad"}], {question.lower()}
+        for g in gap_queries(kb, find_gaps(kb))[:width]:
+            if g["query"].lower() not in seen_q:
+                seen_q.add(g["query"].lower())
+                queries.append({"q": g["query"], "tag": g["gap"]["kind"]})
         urls = []
-        for g in batch:
-            log("round {} · search [{}]: {}".format(rnd, g["gap"]["kind"], g["query"][:58]))
-            for c in discover(g["query"], k=per, source=source, deep=deep, exclude=have) or []:
+        for item in queries:
+            if llm.usage()["usd"] >= budget:
+                break
+            log("round {} · search [{}]: {}".format(rnd, item["tag"], item["q"][:56]))
+            try:
+                cands = discover(item["q"], k=per, source=source, deep=deep, exclude=have) or []
+            except Exception as e:                       # one bad/slow search must not stall the run
+                log("  search failed, skipping: {}".format(str(e)[:80]))
+                continue
+            for c in cands:
                 u = c.get("url")
                 if u and source_key({"url": u}) not in existing:
                     existing.add(source_key({"url": u})); urls.append(u)
         if not urls:
-            log("no new candidates this round — stopping.")
+            log("no new candidates this round — saturated, stopping.")
             break
         log("round {} · fetching + labelling {} new candidate(s)…".format(rnd, len(urls)))
-        res = extract_op(cid, urls, apply=True, batch=8)
+        try:
+            res = extract_op(cid, urls, apply=True, batch=8)
+        except Exception as e:
+            log("  ingest failed this round, stopping: {}".format(str(e)[:100]))
+            break
         added = sum(1 for r in res.get("results", []) if r.get("status") == "added")
         total_added += added
         log("round {} · +{} source(s); ~${:.2f} spent.".format(rnd, added, llm.usage()["usd"]))
         if added == 0:
-            log("nothing merged this round — stopping (diminishing returns).")
+            log("nothing new merged this round — saturated, stopping.")
             break
     remaining = len(find_gaps(_read(_case_path(cid))))
     u = llm.usage()
