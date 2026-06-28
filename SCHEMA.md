@@ -82,13 +82,24 @@ and factor-weights reference those IDs. That indirection is what makes the KB me
    `engaged` (how many positions weighed it), so the divergence view separates **cruxes** (spread
    ≥2) from **shared** factors and **one-sided** ones (only one camp engages).
 
-5. **Adversarial robustness = the thesis, enforced at ingestion.** Three defences live in
-   `engine/merge.py`: (a) **alias-splitting** — incoming dataset names match existing labels *and*
-   learned aliases, so one cohort can't be smuggled in under many names to fake independence;
-   (b) **duplicate sources** — same url, or same title+year, are refused, so a camp can't be
-   inflated by re-submitting a study; (c) because `independence()` measures concentration,
-   **adding correlated evidence pushes the concentration flag UP, not down** — flooding the
-   zone makes a position look *less* independent. Verified in the README walkthrough.
+5. **Adversarial robustness = the thesis, enforced at ingestion + assessment.** Defences span
+   `engine/merge.py` and the independence engine `engine/roots.py` (full spec: `MECHANISM.md`):
+   (a) **alias-splitting** — incoming dataset names match existing labels *and* learned aliases, so
+   one cohort can't be smuggled in under many names; (b) **duplicate sources** — same url, or same
+   **title+year even under a different url**, are refused; (c) **off-topic** sources are judged at
+   labelling time and refused at merge; (d) the independence metric counts **independent evidentiary
+   roots**, not sources — re-used cohorts, review/meta-analysis **echo**, and **circular citation**
+   (A↔B) all collapse to one root (the cycle is flagged), and animal/in-vitro or review-only roots
+   count at half. So **flooding a position with correlated, derivative, or circular evidence can
+   only lower its independence or leave it unchanged — never raise it**, and you can't tank a rival
+   by flooding *it* either. Verified in `tests/test_independence.py`.
+
+   `restsOn` therefore holds **two kinds of edge**: a dataset id, or `"src:<sourceId>"` — a
+   derivation edge to another source, which is what lets the audit follow citation chains to their
+   root and detect circular corroboration. The labeller writes `SRC:<id>` / `NEW-SRC:<title>`; merge
+   resolves it. Evidence **tier** (primary makes evidence; secondary — reviews, meta-analyses,
+   commentary — only talks about it) drives the echo collapse; `population` carries the non-human
+   marker (`Mice` / `Rats` / `In vitro`) that down-weights animal evidence on a clinical question.
 
 ## Why cold-start and update are the same path
 

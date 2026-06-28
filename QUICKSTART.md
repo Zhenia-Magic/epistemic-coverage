@@ -16,18 +16,19 @@ All commands run from the repo root. Replace `<...>` placeholders with your own 
 
 ## First, which mode are you in?
 
-**Finding and reading sources no longer needs an LLM.** Discovery uses a scholarly search
-(OpenAlex) and reading resolves papers by their DOI/PMID/arXiv id through open APIs — both work
-with **no key**. The LLM is needed only to **label** what's fetched (assign position, evidence,
-funding, factor weights). Check once whether you have a key for that step:
+**Reading sources needs no LLM** — a paper is resolved by its DOI/PMID/arXiv id through open APIs
+(and its full open-access PDF when there is one). **Discovery is AI-first** (the model searches the
+web; a keyless OpenAlex search is the `--source api` fallback), and the LLM **labels** what's
+fetched. The labeller is your choice of provider — Anthropic, OpenAI, DeepSeek, Mistral, Groq,
+Gemini, or OpenRouter (AI web search itself needs Anthropic). Check once whether you have a key:
 
 ```bash
-echo $ANTHROPIC_API_KEY      # or:  echo $OPENAI_API_KEY
+echo $ANTHROPIC_API_KEY      # or OPENAI_API_KEY / DEEPSEEK_API_KEY / …
 ```
 
 - **Prints a key →** you're in **AUTO mode**: the tool labels for you, end to end.
 - **Prints nothing →** you're in **MANUAL mode**: the tool still *finds and fetches* sources for
-  free, then prints a labelling prompt you paste into any chatbot and feed back. No account needed.
+  free, then prints a labelling prompt (or one bundle file) you paste into any chatbot. No account needed.
 
 (Optional, one time, for PDF/Word sources: `pip install -r requirements.txt`.)
 
@@ -38,16 +39,13 @@ echo $ANTHROPIC_API_KEY      # or:  echo $OPENAI_API_KEY
 ### Step 1 — create an empty knowledge base
 
 ```bash
-python cli.py init <id> "<your question>" --out cases/<id>.kb.json
-```
-
-Example:
-
-```bash
 python cli.py init salt "Does dietary salt raise blood pressure and cardiovascular risk?" --out cases/salt.kb.json
 ```
 
 You now have an empty `cases/salt.kb.json`. ✔
+
+> Git-style alternative: `python cli.py new "<question>"` creates the case **locally** with a
+> portal-style hex id (work on it, then `push` to the portal when ready).
 
 ### Step 2 — fill it with sources
 
@@ -94,10 +92,10 @@ DOI/PMID/arXiv links through OpenAlex → arXiv → Semantic Scholar → Europe 
 filtered to the dispute's subject topic + exposure term so they stay on-point (both sides of the
 debate are kept); if a niche question returns too few, set `EPISTEMIC_LOOSE_SEARCH=1` to relax it.
 
-**Pick where to search** with `--source`: `api` (OpenAlex only — default, no key), `web` (AI web
-search — also finds news/reports an index misses, needs a key), or `both` (merge the two). Add
-`--deep` to make the AI web search exhaustive — many searches across every position, for/against,
-primary datasets, reviews — rather than one quick pass:
+**Pick where to search** with `--source`: `web` (AI web search — **default**; also finds
+news/reports an index misses; needs an Anthropic key), `api` (keyless OpenAlex fallback), or `both`
+(merge). Use `--k 0` for **no limit** (find as many as possible), and `--deep` to make the AI search
+exhaustive — many searches across every position, for/against, primary datasets, reviews:
 
 ```bash
 python cli.py discover cases/salt.kb.json --k 15 --source both --deep > candidates.json

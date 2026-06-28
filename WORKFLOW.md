@@ -10,31 +10,35 @@ is real and runnable from the repo root.
 - **Python 3.10+.** The core (build a viewer, read metrics, merge sources, `--dry-run`
   ingestion) needs **no packages**.
 - **Optional — document ingestion:** `pip install -r requirements.txt` (only for `.pdf` / `.docx`).
-- **Finding and reading sources need no key.** Discovery is a scholarly search (OpenAlex) and
-  reading resolves a paper by its DOI/PMID/arXiv id through open APIs — both keyless and free of
-  publisher scraping. A key is only needed to **label** the fetched text automatically.
-- **Optional — automatic labelling:** set one API key. Without it you use the *manual path* (the
-  tool finds + fetches sources for free, then prints a labelling prompt to paste into any LLM).
+- **Reading sources needs no key.** A paper is resolved by its DOI/PMID/arXiv id through open APIs
+  (and the full open-access PDF when there is one) — keyless and free of publisher scraping.
+- **Discovery is AI-first.** By default the model searches the web for real sources (told what's
+  already in the KB so it returns *new* ones); a keyless OpenAlex search is the `--source api`
+  fallback. *AI web search / deep research need an Anthropic key; every provider can label.*
+- **Automatic labelling — set one API key (your choice of provider):**
 
   ```bash
-  export ANTHROPIC_API_KEY=sk-...     # Claude (recommended), or
-  export OPENAI_API_KEY=sk-...        # OpenAI
-  # export EPISTEMIC_MODEL=claude-opus-4-8       # optional model override
-  # export EPISTEMIC_CONTACT_EMAIL=you@org       # faster OpenAlex "polite pool"
-  # export EPISTEMIC_NO_API=1                     # force the LLM web-search path instead
+  export ANTHROPIC_API_KEY=sk-ant-...   # Claude (recommended; needed for web search), or any of:
+  export OPENAI_API_KEY=...  DEEPSEEK_API_KEY=...  MISTRAL_API_KEY=...  GROQ_API_KEY=...
+  export GEMINI_API_KEY=...  OPENROUTER_API_KEY=...
+  # export EPISTEMIC_MODEL=...                    # optional model override for your provider
+  # export EPISTEMIC_PORTAL=https://groundknowledge.org   # for pull/push
+  # export EPISTEMIC_CONTACT_EMAIL=you@org        # faster OpenAlex "polite pool"
   ```
+  Without a key you use the *manual path*: the tool finds + fetches sources for free, then prints a
+  labelling prompt (or a single bundle file) to paste into any chatbot; you paste the JSON back.
 
 **Two modes — know which you're in:**
 
 | | With an API key | Without a key |
 |---|---|---|
-| Find sources | `harvest` / `discover` — OpenAlex scholarly search | **same** — `discover` works keyless |
+| Find sources | `harvest` / `discover` — AI web search (or `--source api`) | OpenAlex (`--source api`) works keyless |
 | Read a source | by identifier via OpenAlex/arXiv/etc — **same** | **same** — fetch is keyless |
 | Label a source | `ingest <link/doc> --apply` is automatic | `ingest --dry-run` prints a prompt; you paste, save JSON, `add` it |
 | Everything else | identical | identical |
 
-The mechanical layers (merge, metrics, viewer) are **always** deterministic and offline; finding
-and reading are keyless API calls. Only *labelling* a fetched source uses an LLM.
+The mechanical layers (merge, metrics, viewer) are **always** deterministic and offline; reading is
+a keyless API call. Only *labelling* a fetched source (and AI discovery) uses an LLM.
 
 ---
 
@@ -160,14 +164,18 @@ Prefer the terminal? `python cli.py show <kb>` prints the same summary;
 
 | Command | What it does |
 |---------|-------------|
-| `init <id> "<question>" --out cases/<id>.kb.json` | create an empty knowledge base |
-| `harvest <kb> [--k N] [--source api\|web\|both] [--deep] [--build]` | **cold start in one go** (key for labelling): search → fetch all → label → build |
-| `discover <kb> [--k N] [--source api\|web\|both] [--deep] [--dry-run]` | find candidates: OpenAlex (default, no key), AI web search, or both; `--deep` = exhaustive web pass; `> file.json` to save |
-| `ingest <kb> <link-or-file> [--apply] [--build] [--dry-run]` | fetch one source (by identifier, no scraping) → label → delta (→ merge → build) |
+| `new "<question>"` | **create a question locally** (git-style; hex id like the portal) — work on it, then `push` |
+| `init <id> "<question>" --out cases/<id>.kb.json` | create an empty KB with an explicit id (scripting) |
+| `harvest <kb> [--k N] [--source web\|api\|both] [--deep] [--build]` | **cold start in one go** (key for labelling): search → fetch all → label → build |
+| `discover <kb> [--k N] [--source web\|api\|both] [--deep] [--dry-run]` | find candidates: **AI web search (default)**, keyless OpenAlex, or both; `--k 0` = no limit; `--deep` = exhaustive pass |
+| `deepen <kb> [--rounds N] [--source …] [--all]` | **gap-driven deep search**: find thin spots → search them → ingest → repeat (you pick which gaps) |
+| `gaps <kb> [--json]` | show where evidence is thin (steers `deepen`) |
+| `ingest <kb> <link-or-file> [--apply] [--build] [--dry-run]` | fetch one source → label → delta (→ merge → build) |
 | `add <kb> <delta.json> [--build]` | merge a delta you already have; prints WHAT CHANGED |
-| `show <kb>` | metrics summary in the terminal |
-| `assess <kb>` | full metrics as JSON |
+| `import-citations <kb> <file> [--apply]` · `export <kb> --format bibtex\|ris\|csl` | Zotero/Mendeley/EndNote in & out |
+| `show <kb>` · `assess <kb>` | metrics summary in the terminal · full metrics as JSON |
 | `build <kb> [<kb2> ...] [--out FILE]` | bake the viewer (multiple KBs ⇒ a case switcher) |
+| `pull <id>` · `push <kb>` · `questions` | sync with the portal (set `EPISTEMIC_PORTAL`) |
 
 ## Recipes
 
